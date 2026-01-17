@@ -1,0 +1,80 @@
+[
+  {
+    "id": "grammar-basic",
+    "quest_type": "grammar",
+    "title": "व्याकरण मास्टर",
+    "description": "संज्ञा, सर्वनाम र विशेषण पहिचान गर्नुहोस्",
+    "difficulty": "easy",
+    "min_level": 1,
+    "points_reward": 100,
+    "coins_reward": 50,
+    "knowledge_reward": 50,
+    "books_reward": 5,
+    "order": 1
+  },
+  {
+    "id": "vocabulary-animals",
+    "quest_type": "vocabulary",
+    "title": "जनावरका नाम",
+    "description": "विभिन्न जनावरहरूका नेपाली नामहरू सिक्नुहोस्",
+    "difficulty": "easy",
+    "min_level": 1,
+    "points_reward": 80,
+    "coins_reward": 40,
+    "knowledge_reward": 40,
+    "books_reward": 3,
+    "order": 2
+  },
+  {
+    "id": "writing-story",
+    "quest_type": "writing",
+    "title": "कथा लेखक",
+    "description": "एउटा छोटो कथा लेख्नुहोस्",
+    "difficulty": "medium",
+    "min_level": 2,
+    "points_reward": 150,
+    "coins_reward": 100,
+    "knowledge_reward": 100,
+    "books_reward": 10,
+    "order": 3
+  },
+  {
+    "id": "grammar-advanced",
+    "quest_type": "grammar",
+    "title": "क्रिया विशेषज्ञ",
+    "description": "क्रियाका विभिन्न रूपहरू पहिचान गर्नुहोस्",
+    "difficulty": "medium",
+    "min_level": 3,
+    "points_reward": 200,
+    "coins_reward": 120,
+    "knowledge_reward": 120,
+    "books_reward": 8,
+    "order": 4
+  },
+  {
+    "id": "vocabulary-advanced",
+    "quest_type": "vocabulary",
+    "title": "शब्द भण्डार",
+    "description": "कठिन शब्दहरूको अर्थ सिक्नुहोस्",
+    "difficulty": "hard",
+    "min_level": 4,
+    "points_reward": 250,
+    "coins_reward": 150,
+    "knowledge_reward": 150,
+    "books_reward": 12,
+    "order": 5
+  },
+  {
+    "id": "writing-essay",
+    "quest_type": "writing",
+    "title": "निबन्ध लेखक",
+    "description": "एउटा निबन्ध लेख्नुहोस्",
+    "difficulty": "hard",
+    "min_level": 5,
+    "points_reward": 300,
+    "coins_reward": 200,
+    "knowledge_reward": 200,
+    "books_reward": 15,
+    "order": 6
+  }
+]

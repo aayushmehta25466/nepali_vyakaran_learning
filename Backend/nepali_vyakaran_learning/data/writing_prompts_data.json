@@ -1,0 +1,46 @@
+[
+  {
+    "id": "story-1",
+    "prompt_type": "story",
+    "title": "कथा लेखन अभ्यास",
+    "prompt": "एक दिन तपाईं जंगलमा हिँडिरहनुभएको थियो। अचानक तपाईंले एउटा बोल्ने चरा देख्नुभयो। त्यो चराले तपाईंलाई के भन्यो होला? यस घटनाबाट सुरु भएको कथा लेख्नुहोस्।",
+    "difficulty": "easy",
+    "points_reward": 20,
+    "coins_reward": 10,
+    "min_words": 100,
+    "max_words": 500
+  },
+  {
+    "id": "essay-1",
+    "prompt_type": "essay",
+    "title": "निबन्ध लेखन अभ्यास",
+    "prompt": "\"मेरो प्रिय चाड\" विषयमा एउटा छोटो निबन्ध लेख्नुहोस्। तपाईंको मनपर्ने चाड कुन हो र किन? त्यो चाडमा के के गर्नुहुन्छ?",
+    "difficulty": "medium",
+    "points_reward": 25,
+    "coins_reward": 12,
+    "min_words": 150,
+    "max_words": 400
+  },
+  {
+    "id": "application-1",
+    "prompt_type": "application",
+    "title": "आवेदन लेखन अभ्यास",
+    "prompt": "तपाईंको स्कुलमा खेलकुद प्रतियोगिता छ। त्यसमा भाग लिनको लागि प्रधानाध्यापकलाई आवेदन लेख्नुहोस्।",
+    "difficulty": "medium",
+    "points_reward": 30,
+    "coins_reward": 15,
+    "min_words": 100,
+    "max_words": 300
+  },
+  {
+    "id": "creative-1",
+    "prompt_type": "creative",
+    "title": "रचनात्मक लेखन अभ्यास",
+    "prompt": "\"वर्षा\" विषयमा एउटा छोटो कविता वा रचना लेख्नुहोस्। वर्षाले तपाईंलाई कस्तो लाग्छ?",
+    "difficulty": "easy",
+    "points_reward": 20,
+    "coins_reward": 10,
+    "min_words": 50,
+    "max_words": 300
+  }
+]

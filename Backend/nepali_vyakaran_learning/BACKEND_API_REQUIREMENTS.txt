@@ -1,0 +1,1254 @@
+================================================================================
+NEPALI VYAKARAN LEARNING - BACKEND API REQUIREMENTS & SITE MAPPING
+================================================================================
+Project: Nepali Grammar Learning Platform with Gamification
+Generated: January 6, 2026
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. Authentication & User Management APIs
+2. User Progress & Game State APIs
+3. Lesson Management APIs
+4. Quiz & Assessment APIs
+5. Village/Gamification System APIs
+6. Quest System APIs
+7. Writing Practice APIs
+8. Games APIs
+9. Achievement & Badge APIs
+10. Analytics & Statistics APIs
+11. Settings & Preferences APIs
+12. Content Management APIs
+
+================================================================================
+
+1. AUTHENTICATION & USER MANAGEMENT APIs
+================================================================================
+
+1.1 POST /api/auth/register
+    Description: Register a new user
+    Access Level: Public
+    Request Body:
+        - username: string (required)
+        - email: string (required)
+        - password: string (required)
+        - confirmPassword: string (required)
+    Response:
+        - userId: string
+        - token: string
+        - user: object
+
+1.2 POST /api/auth/login
+    Description: User login
+    Access Level: Public
+    Request Body:
+        - email: string (required)
+        - password: string (required)
+    Response:
+        - token: string
+        - user: object
+        - gameState: object
+
+1.3 POST /api/auth/logout
+    Description: User logout
+    Access Level: Authenticated
+    Response:
+        - success: boolean
+        - message: string
+
+1.4 POST /api/auth/refresh-token
+    Description: Refresh authentication token
+    Access Level: Authenticated
+    Response:
+        - token: string
+        - expiresIn: number
+
+1.5 POST /api/auth/forgot-password
+    Description: Request password reset
+    Access Level: Public
+    Request Body:
+        - email: string (required)
+    Response:
+        - success: boolean
+        - message: string
+
+1.6 POST /api/auth/reset-password
+    Description: Reset user password
+    Access Level: Public
+    Request Body:
+        - token: string (required)
+        - newPassword: string (required)
+    Response:
+        - success: boolean
+        - message: string
+
+1.7 GET /api/users/profile
+    Description: Get current user profile
+    Access Level: Authenticated
+    Response:
+        - userId: string
+        - username: string
+        - email: string
+        - avatar: string
+        - joinedDate: date
+        - stats: object
+
+1.8 PUT /api/users/profile
+    Description: Update user profile
+    Access Level: Authenticated
+    Request Body:
+        - username: string (optional)
+        - email: string (optional)
+        - avatar: string (optional)
+        - bio: string (optional)
+    Response:
+        - user: object
+        - message: string
+
+1.9 DELETE /api/users/account
+    Description: Delete user account
+    Access Level: Authenticated
+    Response:
+        - success: boolean
+        - message: string
+
+================================================================================
+
+2. USER PROGRESS & GAME STATE APIs
+================================================================================
+
+2.1 GET /api/users/game-state
+    Description: Get user's complete game state
+    Access Level: Authenticated
+    Response:
+        - level: number
+        - points: number
+        - coins: number
+        - badges: array
+        - unlockedZones: array
+        - currentStreak: number
+        - totalCorrectAnswers: number
+        - completedLessons: array
+        - achievements: array
+
+2.2 PUT /api/users/game-state
+    Description: Update user's game state
+    Access Level: Authenticated
+    Request Body:
+        - level: number (optional)
+        - points: number (optional)
+        - coins: number (optional)
+        - badges: array (optional)
+        - unlockedZones: array (optional)
+        - currentStreak: number (optional)
+        - totalCorrectAnswers: number (optional)
+        - completedLessons: array (optional)
+        - achievements: array (optional)
+    Response:
+        - gameState: object
+        - message: string
+
+2.3 POST /api/users/add-points
+    Description: Add points to user's account
+    Access Level: Authenticated
+    Request Body:
+        - points: number (required)
+        - reason: string (required)
+    Response:
+        - newPoints: number
+        - totalPoints: number
+        - levelUp: boolean
+        - newLevel: number (if levelUp)
+
+2.4 POST /api/users/add-coins
+    Description: Add coins to user's account
+    Access Level: Authenticated
+    Request Body:
+        - coins: number (required)
+        - source: string (required)
+    Response:
+        - newCoins: number
+        - totalCoins: number
+
+2.5 POST /api/users/spend-coins
+    Description: Spend user coins
+    Access Level: Authenticated
+    Request Body:
+        - amount: number (required)
+        - itemId: string (required)
+        - itemType: string (required)
+    Response:
+        - remainingCoins: number
+        - success: boolean
+
+2.6 POST /api/users/unlock-zone
+    Description: Unlock a new learning zone
+    Access Level: Authenticated
+    Request Body:
+        - zoneId: string (required)
+    Response:
+        - unlockedZones: array
+        - success: boolean
+
+2.7 POST /api/users/complete-lesson
+    Description: Mark a lesson as completed
+    Access Level: Authenticated
+    Request Body:
+        - lessonId: string (required)
+        - score: number (required)
+        - timeSpent: number (required)
+    Response:
+        - completedLessons: array
+        - pointsAwarded: number
+        - coinsAwarded: number
+        - newAchievements: array
+
+2.8 POST /api/users/update-streak
+    Description: Update user's learning streak
+    Access Level: Authenticated
+    Request Body:
+        - action: string (required) // 'increment' or 'reset'
+    Response:
+        - currentStreak: number
+        - longestStreak: number
+        - streakReward: object (if milestone reached)
+
+================================================================================
+
+3. LESSON MANAGEMENT APIs
+================================================================================
+
+3.1 GET /api/lessons
+    Description: Get all available lessons
+    Access Level: Authenticated
+    Query Parameters:
+        - category: string (optional)
+        - level: number (optional)
+        - page: number (optional)
+        - limit: number (optional)
+    Response:
+        - lessons: array
+        - total: number
+        - currentPage: number
+
+3.2 GET /api/lessons/:lessonId
+    Description: Get specific lesson details
+    Access Level: Authenticated
+    Response:
+        - lessonId: string
+        - title: string
+        - titleNepali: string
+        - description: string
+        - category: string
+        - level: number
+        - content: object
+        - exercises: array
+        - estimatedTime: number
+        - points: number
+        - isLocked: boolean
+        - prerequisites: array
+
+3.3 GET /api/lessons/:lessonId/content
+    Description: Get lesson content
+    Access Level: Authenticated
+    Response:
+        - sections: array
+        - examples: array
+        - explanations: array
+        - media: array
+
+3.4 POST /api/lessons/:lessonId/start
+    Description: Start a lesson (track progress)
+    Access Level: Authenticated
+    Response:
+        - sessionId: string
+        - startTime: timestamp
+        - lessonData: object
+
+3.5 POST /api/lessons/:lessonId/complete
+    Description: Complete a lesson
+    Access Level: Authenticated
+    Request Body:
+        - sessionId: string (required)
+        - score: number (required)
+        - timeSpent: number (required)
+        - answers: array (required)
+    Response:
+        - completed: boolean
+        - score: number
+        - pointsEarned: number
+        - coinsEarned: number
+        - nextLesson: object
+
+3.6 GET /api/lessons/categories
+    Description: Get all lesson categories
+    Access Level: Authenticated
+    Response:
+        - categories: array
+
+3.7 GET /api/lessons/progress
+    Description: Get user's lesson progress
+    Access Level: Authenticated
+    Response:
+        - totalLessons: number
+        - completedLessons: number
+        - inProgressLessons: number
+        - lockedLessons: number
+        - categoryProgress: array
+
+================================================================================
+
+4. QUIZ & ASSESSMENT APIs
+================================================================================
+
+4.1 GET /api/quizzes
+    Description: Get available quizzes
+    Access Level: Authenticated
+    Query Parameters:
+        - category: string (optional)
+        - difficulty: string (optional)
+    Response:
+        - quizzes: array
+
+4.2 GET /api/quizzes/:quizId
+    Description: Get specific quiz
+    Access Level: Authenticated
+    Response:
+        - quizId: string
+        - title: string
+        - description: string
+        - questions: array
+        - timeLimit: number
+        - difficulty: string
+        - points: number
+
+4.3 POST /api/quizzes/:quizId/start
+    Description: Start a quiz session
+    Access Level: Authenticated
+    Response:
+        - sessionId: string
+        - quiz: object
+        - startTime: timestamp
+
+4.4 POST /api/quizzes/:quizId/submit
+    Description: Submit quiz answers
+    Access Level: Authenticated
+    Request Body:
+        - sessionId: string (required)
+        - answers: array (required)
+        - timeSpent: number (required)
+    Response:
+        - score: number
+        - correctAnswers: number
+        - totalQuestions: number
+        - pointsEarned: number
+        - coinsEarned: number
+        - feedback: array
+
+4.5 GET /api/quizzes/:quizId/results
+    Description: Get quiz results
+    Access Level: Authenticated
+    Query Parameters:
+        - sessionId: string (required)
+    Response:
+        - score: number
+        - answers: array
+        - correctAnswers: array
+        - explanations: array
+        - performance: object
+
+4.6 POST /api/assessments/grammar
+    Description: Grammar assessment
+    Access Level: Authenticated
+    Request Body:
+        - questionId: string (required)
+        - answer: string (required)
+    Response:
+        - correct: boolean
+        - explanation: string
+        - points: number
+
+4.7 POST /api/assessments/vocabulary
+    Description: Vocabulary assessment
+    Access Level: Authenticated
+    Request Body:
+        - questionId: string (required)
+        - answer: string (required)
+    Response:
+        - correct: boolean
+        - translation: string
+        - usage: string
+        - points: number
+
+================================================================================
+
+5. VILLAGE/GAMIFICATION SYSTEM APIs
+================================================================================
+
+5.1 GET /api/village
+    Description: Get user's village data
+    Access Level: Authenticated
+    Response:
+        - villageId: string
+        - level: number
+        - experience: number
+        - buildings: array
+        - resources: object
+        - gridSize: object
+        - lastUpdated: timestamp
+
+5.2 PUT /api/village
+    Description: Update village data
+    Access Level: Authenticated
+    Request Body:
+        - buildings: array (optional)
+        - resources: object (optional)
+        - level: number (optional)
+        - experience: number (optional)
+    Response:
+        - village: object
+        - success: boolean
+
+5.3 POST /api/village/buildings/add
+    Description: Add a new building
+    Access Level: Authenticated
+    Request Body:
+        - buildingType: string (required)
+        - position: object (required) // {x, y}
+        - level: number (required)
+    Response:
+        - building: object
+        - remainingResources: object
+        - success: boolean
+
+5.4 PUT /api/village/buildings/:buildingId/upgrade
+    Description: Upgrade a building
+    Access Level: Authenticated
+    Request Body:
+        - targetLevel: number (required)
+    Response:
+        - building: object
+        - remainingResources: object
+        - upgradeTime: number
+        - success: boolean
+
+5.5 DELETE /api/village/buildings/:buildingId
+    Description: Remove a building
+    Access Level: Authenticated
+    Response:
+        - success: boolean
+        - refundedResources: object
+
+5.6 GET /api/village/resources
+    Description: Get village resources
+    Access Level: Authenticated
+    Response:
+        - coins: number
+        - knowledge: number
+        - books: number
+        - energy: number
+
+5.7 POST /api/village/resources/update
+    Description: Update village resources
+    Access Level: Authenticated
+    Request Body:
+        - coins: number (optional)
+        - knowledge: number (optional)
+        - books: number (optional)
+        - energy: number (optional)
+        - operation: string (required) // 'add' or 'subtract'
+    Response:
+        - resources: object
+        - success: boolean
+
+5.8 GET /api/village/buildings/types
+    Description: Get available building types
+    Access Level: Authenticated
+    Response:
+        - buildingTypes: array
+        - costs: object
+        - benefits: object
+
+================================================================================
+
+6. QUEST SYSTEM APIs
+================================================================================
+
+6.1 GET /api/quests
+    Description: Get available quests
+    Access Level: Authenticated
+    Query Parameters:
+        - type: string (optional) // 'grammar', 'vocabulary', 'writing'
+        - difficulty: string (optional)
+        - status: string (optional) // 'available', 'active', 'completed'
+    Response:
+        - quests: array
+        - activeQuests: array
+        - completedQuests: array
+
+6.2 GET /api/quests/:questId
+    Description: Get specific quest details
+    Access Level: Authenticated
+    Response:
+        - questId: string
+        - name: string
+        - description: string
+        - type: string
+        - difficulty: string
+        - reward: object
+        - requirements: object
+        - progress: object
+        - minLevel: number
+
+6.3 POST /api/quests/:questId/start
+    Description: Start a quest
+    Access Level: Authenticated
+    Response:
+        - quest: object
+        - startTime: timestamp
+        - sessionId: string
+
+6.4 POST /api/quests/:questId/complete
+    Description: Complete a quest
+    Access Level: Authenticated
+    Request Body:
+        - sessionId: string (required)
+        - results: object (required)
+    Response:
+        - completed: boolean
+        - rewards: object
+        - achievements: array
+        - nextQuest: object
+
+6.5 GET /api/quests/daily
+    Description: Get daily quests
+    Access Level: Authenticated
+    Response:
+        - quests: array
+        - resetTime: timestamp
+        - completedToday: number
+
+6.6 GET /api/quests/progress
+    Description: Get quest progress
+    Access Level: Authenticated
+    Response:
+        - activeQuests: array
+        - completedQuests: number
+        - totalQuests: number
+        - questStreak: number
+
+================================================================================
+
+7. WRITING PRACTICE APIs
+================================================================================
+
+7.1 GET /api/writing/prompts
+    Description: Get writing prompts
+    Access Level: Authenticated
+    Query Parameters:
+        - type: string (optional) // 'story', 'essay', 'application', 'creative'
+        - difficulty: string (optional)
+    Response:
+        - prompts: array
+
+7.2 GET /api/writing/prompts/:promptId
+    Description: Get specific writing prompt
+    Access Level: Authenticated
+    Response:
+        - promptId: string
+        - title: string
+        - description: string
+        - type: string
+        - guidelines: array
+        - examples: array
+        - minWords: number
+        - maxWords: number
+
+7.3 POST /api/writing/submit
+    Description: Submit writing for evaluation
+    Access Level: Authenticated
+    Request Body:
+        - promptId: string (required)
+        - content: string (required)
+        - wordCount: number (required)
+        - timeSpent: number (required)
+    Response:
+        - submissionId: string
+        - feedback: object
+        - score: number
+        - suggestions: array
+        - pointsEarned: number
+
+7.4 GET /api/writing/submissions
+    Description: Get user's writing submissions
+    Access Level: Authenticated
+    Query Parameters:
+        - page: number (optional)
+        - limit: number (optional)
+    Response:
+        - submissions: array
+        - total: number
+        - currentPage: number
+
+7.5 GET /api/writing/submissions/:submissionId
+    Description: Get specific submission details
+    Access Level: Authenticated
+    Response:
+        - submission: object
+        - feedback: object
+        - score: number
+        - suggestions: array
+
+7.6 POST /api/writing/save-draft
+    Description: Save writing draft
+    Access Level: Authenticated
+    Request Body:
+        - promptId: string (required)
+        - content: string (required)
+        - title: string (optional)
+    Response:
+        - draftId: string
+        - savedAt: timestamp
+
+7.7 GET /api/writing/drafts
+    Description: Get saved drafts
+    Access Level: Authenticated
+    Response:
+        - drafts: array
+
+7.8 DELETE /api/writing/drafts/:draftId
+    Description: Delete a draft
+    Access Level: Authenticated
+    Response:
+        - success: boolean
+
+7.9 POST /api/writing/grammar-check
+    Description: Check grammar in text
+    Access Level: Authenticated
+    Request Body:
+        - text: string (required)
+    Response:
+        - corrections: array
+        - suggestions: array
+        - score: number
+
+================================================================================
+
+8. GAMES APIs
+================================================================================
+
+8.1 GET /api/games
+    Description: Get available games
+    Access Level: Authenticated
+    Response:
+        - games: array
+        - featured: array
+
+8.2 GET /api/games/:gameId
+    Description: Get specific game details
+    Access Level: Authenticated
+    Response:
+        - gameId: string
+        - name: string
+        - description: string
+        - type: string
+        - difficulty: string
+        - instructions: string
+        - highScore: number
+
+8.3 POST /api/games/:gameId/start
+    Description: Start a game session
+    Access Level: Authenticated
+    Response:
+        - sessionId: string
+        - gameData: object
+        - startTime: timestamp
+
+8.4 POST /api/games/:gameId/end
+    Description: End a game session and submit score
+    Access Level: Authenticated
+    Request Body:
+        - sessionId: string (required)
+        - score: number (required)
+        - stats: object (required)
+        - timeSpent: number (required)
+    Response:
+        - finalScore: number
+        - pointsEarned: number
+        - coinsEarned: number
+        - newHighScore: boolean
+        - ranking: number
+
+8.5 GET /api/games/:gameId/leaderboard
+    Description: Get game leaderboard
+    Access Level: Authenticated
+    Query Parameters:
+        - period: string (optional) // 'daily', 'weekly', 'monthly', 'all-time'
+        - limit: number (optional)
+    Response:
+        - leaderboard: array
+        - userRank: number
+        - userScore: number
+
+8.6 GET /api/games/grammar-shooter/questions
+    Description: Get grammar shooter questions
+    Access Level: Authenticated
+    Query Parameters:
+        - difficulty: string (optional)
+        - count: number (optional)
+    Response:
+        - questions: array
+
+8.7 POST /api/games/grammar-shooter/validate
+    Description: Validate answer in grammar shooter
+    Access Level: Authenticated
+    Request Body:
+        - questionId: string (required)
+        - answer: string (required)
+    Response:
+        - correct: boolean
+        - explanation: string
+        - points: number
+
+================================================================================
+
+9. ACHIEVEMENT & BADGE APIs
+================================================================================
+
+9.1 GET /api/achievements
+    Description: Get all achievements
+    Access Level: Authenticated
+    Response:
+        - achievements: array
+        - earned: array
+        - locked: array
+
+9.2 GET /api/achievements/:achievementId
+    Description: Get specific achievement details
+    Access Level: Authenticated
+    Response:
+        - achievementId: string
+        - name: string
+        - description: string
+        - icon: string
+        - rarity: string
+        - reward: object
+        - criteria: object
+        - progress: object
+
+9.3 POST /api/achievements/:achievementId/claim
+    Description: Claim achievement reward
+    Access Level: Authenticated
+    Response:
+        - claimed: boolean
+        - reward: object
+
+9.4 GET /api/badges
+    Description: Get user's badges
+    Access Level: Authenticated
+    Response:
+        - badges: array
+        - totalBadges: number
+        - recentBadges: array
+
+9.5 POST /api/badges/award
+    Description: Award a badge (internal API)
+    Access Level: Admin
+    Request Body:
+        - userId: string (required)
+        - badgeId: string (required)
+        - reason: string (required)
+    Response:
+        - success: boolean
+        - badge: object
+
+================================================================================
+
+10. ANALYTICS & STATISTICS APIs
+================================================================================
+
+10.1 GET /api/stats/overview
+     Description: Get user statistics overview
+     Access Level: Authenticated
+     Response:
+         - totalPoints: number
+         - totalCoins: number
+         - level: number
+         - completedLessons: number
+         - currentStreak: number
+         - longestStreak: number
+         - totalTimeSpent: number
+         - accuracy: number
+
+10.2 GET /api/stats/progress
+     Description: Get detailed progress statistics
+     Access Level: Authenticated
+     Query Parameters:
+         - period: string (optional) // 'week', 'month', 'year'
+     Response:
+         - dailyProgress: array
+         - weeklyProgress: array
+         - monthlyProgress: array
+         - categories: object
+
+10.3 GET /api/stats/activity
+     Description: Get activity history
+     Access Level: Authenticated
+     Query Parameters:
+         - startDate: date (optional)
+         - endDate: date (optional)
+     Response:
+         - activities: array
+         - totalActiveDays: number
+         - averageDaily: number
+
+10.4 GET /api/stats/leaderboard
+     Description: Get global leaderboard
+     Access Level: Authenticated
+     Query Parameters:
+         - type: string (required) // 'points', 'level', 'streak'
+         - period: string (optional)
+         - limit: number (optional)
+     Response:
+         - leaderboard: array
+         - userRank: number
+
+10.5 GET /api/stats/category/:category
+     Description: Get statistics for specific category
+     Access Level: Authenticated
+     Response:
+         - category: string
+         - progress: number
+         - accuracy: number
+         - timeSpent: number
+         - completedItems: number
+
+10.6 GET /api/stats/comparison
+     Description: Compare with other users
+     Access Level: Authenticated
+     Query Parameters:
+         - userId: string (optional)
+     Response:
+         - comparison: object
+         - strengths: array
+         - improvements: array
+
+================================================================================
+
+11. SETTINGS & PREFERENCES APIs
+================================================================================
+
+11.1 GET /api/settings
+     Description: Get user settings
+     Access Level: Authenticated
+     Response:
+         - language: string
+         - notifications: object
+         - theme: string
+         - sound: boolean
+         - difficulty: string
+         - privacy: object
+
+11.2 PUT /api/settings
+     Description: Update user settings
+     Access Level: Authenticated
+     Request Body:
+         - language: string (optional)
+         - notifications: object (optional)
+         - theme: string (optional)
+         - sound: boolean (optional)
+         - difficulty: string (optional)
+         - privacy: object (optional)
+     Response:
+         - settings: object
+         - success: boolean
+
+11.3 PUT /api/settings/language
+     Description: Change interface language
+     Access Level: Authenticated
+     Request Body:
+         - language: string (required) // 'ne' or 'en'
+     Response:
+         - language: string
+         - success: boolean
+
+11.4 PUT /api/settings/notifications
+     Description: Update notification preferences
+     Access Level: Authenticated
+     Request Body:
+         - email: boolean (optional)
+         - push: boolean (optional)
+         - reminders: boolean (optional)
+         - achievements: boolean (optional)
+     Response:
+         - notifications: object
+         - success: boolean
+
+11.5 POST /api/settings/reset
+     Description: Reset all settings to default
+     Access Level: Authenticated
+     Response:
+         - settings: object
+         - success: boolean
+
+11.6 POST /api/settings/reset-progress
+     Description: Reset user progress (dangerous)
+     Access Level: Authenticated
+     Request Body:
+         - confirmation: string (required)
+     Response:
+         - success: boolean
+         - message: string
+
+================================================================================
+
+12. CONTENT MANAGEMENT APIs (Admin)
+================================================================================
+
+12.1 POST /api/admin/lessons
+     Description: Create new lesson
+     Access Level: Admin
+     Request Body:
+         - title: string (required)
+         - titleNepali: string (required)
+         - description: string (required)
+         - category: string (required)
+         - level: number (required)
+         - content: object (required)
+         - exercises: array (required)
+     Response:
+         - lesson: object
+         - success: boolean
+
+12.2 PUT /api/admin/lessons/:lessonId
+     Description: Update lesson
+     Access Level: Admin
+     Request Body:
+         - [lesson fields to update]
+     Response:
+         - lesson: object
+         - success: boolean
+
+12.3 DELETE /api/admin/lessons/:lessonId
+     Description: Delete lesson
+     Access Level: Admin
+     Response:
+         - success: boolean
+
+12.4 POST /api/admin/quizzes
+     Description: Create new quiz
+     Access Level: Admin
+     Request Body:
+         - title: string (required)
+         - questions: array (required)
+         - difficulty: string (required)
+     Response:
+         - quiz: object
+         - success: boolean
+
+12.5 POST /api/admin/quests
+     Description: Create new quest
+     Access Level: Admin
+     Request Body:
+         - name: string (required)
+         - description: string (required)
+         - type: string (required)
+         - difficulty: string (required)
+         - reward: object (required)
+     Response:
+         - quest: object
+         - success: boolean
+
+12.6 GET /api/admin/users
+     Description: Get all users (paginated)
+     Access Level: Admin
+     Query Parameters:
+         - page: number (optional)
+         - limit: number (optional)
+         - search: string (optional)
+     Response:
+         - users: array
+         - total: number
+         - currentPage: number
+
+12.7 GET /api/admin/analytics
+     Description: Get platform analytics
+     Access Level: Admin
+     Response:
+         - totalUsers: number
+         - activeUsers: number
+         - completionRates: object
+         - popularLessons: array
+         - userGrowth: array
+
+12.8 POST /api/admin/content/bulk-upload
+     Description: Bulk upload content
+     Access Level: Admin
+     Request Body:
+         - type: string (required) // 'lessons', 'quizzes', 'questions'
+         - data: array (required)
+     Response:
+         - uploaded: number
+         - failed: number
+         - errors: array
+
+================================================================================
+
+API AUTHENTICATION & AUTHORIZATION
+================================================================================
+
+Authentication Methods:
+-----------------------
+1. JWT (JSON Web Token) - Primary method
+   - Token sent in Authorization header: "Bearer <token>"
+   - Token expiration: 24 hours
+   - Refresh token: 7 days
+
+2. Session-based (Alternative)
+   - Session cookie with httpOnly flag
+   - CSRF token for state-changing operations
+
+Access Levels:
+--------------
+1. Public - No authentication required
+2. Authenticated - Requires valid user token
+3. Admin - Requires admin role/privileges
+4. System - Internal APIs only
+
+Rate Limiting:
+--------------
+- Public APIs: 100 requests/hour per IP
+- Authenticated APIs: 1000 requests/hour per user
+- Admin APIs: 5000 requests/hour
+- File uploads: 10 MB max size per request
+
+================================================================================
+
+API RESPONSE FORMATS
+================================================================================
+
+Success Response:
+{
+    "success": true,
+    "data": { ... },
+    "message": "Optional success message",
+    "timestamp": "2026-01-06T12:00:00Z"
+}
+
+Error Response:
+{
+    "success": false,
+    "error": {
+        "code": "ERROR_CODE",
+        "message": "Human readable error message",
+        "details": { ... }
+    },
+    "timestamp": "2026-01-06T12:00:00Z"
+}
+
+Pagination Response:
+{
+    "success": true,
+    "data": [...],
+    "pagination": {
+        "currentPage": 1,
+        "totalPages": 10,
+        "pageSize": 20,
+        "totalItems": 200,
+        "hasNextPage": true,
+        "hasPreviousPage": false
+    }
+}
+
+================================================================================
+
+COMMON HTTP STATUS CODES
+================================================================================
+
+200 - OK: Request successful
+201 - Created: Resource created successfully
+204 - No Content: Request successful, no content to return
+400 - Bad Request: Invalid request parameters
+401 - Unauthorized: Authentication required or failed
+403 - Forbidden: Authenticated but no permission
+404 - Not Found: Resource not found
+409 - Conflict: Resource conflict (e.g., duplicate)
+422 - Unprocessable Entity: Validation errors
+429 - Too Many Requests: Rate limit exceeded
+500 - Internal Server Error: Server error
+503 - Service Unavailable: Server temporarily unavailable
+
+================================================================================
+
+WEBSOCKET APIS (Real-time Features)
+================================================================================
+
+WS /ws/live-quiz
+    Description: Real-time quiz sessions
+    Access Level: Authenticated
+    Events:
+        - quiz.start
+        - quiz.question
+        - quiz.answer
+        - quiz.end
+        - quiz.leaderboard.update
+
+WS /ws/notifications
+    Description: Real-time notifications
+    Access Level: Authenticated
+    Events:
+        - achievement.unlocked
+        - badge.earned
+        - level.up
+        - quest.available
+        - friend.activity
+
+WS /ws/village
+    Description: Real-time village updates
+    Access Level: Authenticated
+    Events:
+        - building.complete
+        - resource.update
+        - village.level.up
+
+================================================================================
+
+RECOMMENDED DATABASE SCHEMA ENTITIES
+================================================================================
+
+Core Entities:
+1. Users
+2. GameStates
+3. Lessons
+4. LessonProgress
+5. Quizzes
+6. QuizResults
+7. Questions
+8. Answers
+9. Villages
+10. Buildings
+11. VillageResources
+12. Quests
+13. QuestProgress
+14. Achievements
+15. UserAchievements
+16. Badges
+17. UserBadges
+18. WritingSubmissions
+19. WritingFeedback
+20. Games
+21. GameSessions
+22. Leaderboards
+23. UserStats
+24. ActivityLogs
+25. Settings
+26. Notifications
+
+================================================================================
+
+THIRD-PARTY INTEGRATIONS RECOMMENDED
+================================================================================
+
+1. Authentication: Auth0, Firebase Auth, or Passport.js
+2. Storage: AWS S3 or Google Cloud Storage (for media files)
+3. Email: SendGrid or AWS SES
+4. Analytics: Mixpanel or Google Analytics
+5. Error Tracking: Sentry
+6. Payment (future): Stripe or Razorpay
+7. CDN: Cloudflare or AWS CloudFront
+8. Push Notifications: Firebase Cloud Messaging
+
+================================================================================
+
+SECURITY CONSIDERATIONS
+================================================================================
+
+1. Input Validation: Validate all user inputs on backend
+2. SQL Injection Prevention: Use parameterized queries/ORM
+3. XSS Prevention: Sanitize all user-generated content
+4. CSRF Protection: Implement CSRF tokens
+5. Rate Limiting: Implement per-user and per-IP rate limits
+6. Password Security: Use bcrypt with salt (minimum 10 rounds)
+7. Data Encryption: Encrypt sensitive data at rest
+8. HTTPS: Use SSL/TLS for all communications
+9. API Versioning: Version all APIs (e.g., /api/v1/)
+10. Logging: Log all security-relevant events
+
+================================================================================
+
+API VERSIONING STRATEGY
+================================================================================
+
+Current Version: v1
+Format: /api/v1/[endpoint]
+
+Version deprecation policy:
+- Support N-1 versions
+- 6-month deprecation notice
+- Clear migration documentation
+
+================================================================================
+
+RECOMMENDED TECH STACK
+================================================================================
+
+Backend:
+- Node.js with Express.js OR Python with Django/FastAPI
+- PostgreSQL (primary database)
+- Redis (caching and sessions)
+- MongoDB (optional, for flexible content)
+
+Authentication:
+- JWT (jsonwebtoken)
+- Passport.js
+
+API Documentation:
+- Swagger/OpenAPI
+- Postman Collections
+
+Testing:
+- Jest (JavaScript) or Pytest (Python)
+- Supertest for API testing
+- Load testing with Apache JMeter or k6
+
+================================================================================
+
+DEPLOYMENT RECOMMENDATIONS
+================================================================================
+
+- Docker containers for easy deployment
+- Kubernetes for orchestration (if scaling needed)
+- CI/CD with GitHub Actions or GitLab CI
+- Staging and Production environments
+- Database migrations with Flyway or Alembic
+- Environment-based configuration
+- Health check endpoints: GET /api/health
+
+================================================================================
+
+MONITORING & LOGGING
+================================================================================
+
+Required Endpoints:
+- GET /api/health - Health check
+- GET /api/status - Detailed status
+- GET /api/metrics - Performance metrics
+
+Logging Levels:
+- ERROR: Critical errors requiring immediate attention
+- WARN: Warning conditions
+- INFO: Informational messages
+- DEBUG: Debug-level messages
+
+================================================================================
+
+END OF API REQUIREMENTS DOCUMENT
+================================================================================
+Generated for: Nepali Vyakaran Learning Platform
+Date: January 6, 2026
+Total API Endpoints: 100+
+Priority: High (All features in current frontend)
+
+For questions or clarifications, please refer to the frontend codebase
+or contact the development team.
+================================================================================

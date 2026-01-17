@@ -1,0 +1,57 @@
+[
+  {
+    "id": "grammar-q1",
+    "game_type": "grammar_shooter",
+    "question": "कुन शब्द संज्ञा हो?",
+    "options": ["राम्रो", "किताब", "दौडिरहेको", "चाँडो"],
+    "correct_answer": 1,
+    "difficulty": "easy",
+    "points": 10,
+    "category": "noun",
+    "explanation": "किताब एक संज्ञा शब्द हो किनभने यसले वस्तुको नाम बुझाउँछ।"
+  },
+  {
+    "id": "grammar-q2",
+    "game_type": "grammar_shooter",
+    "question": "कुन शब्द विशेषण हो?",
+    "options": ["घर", "सुन्दर", "खेल्नु", "हिँड्नु"],
+    "correct_answer": 1,
+    "difficulty": "easy",
+    "points": 10,
+    "category": "adjective",
+    "explanation": "सुन्दर एक विशेषण शब्द हो किनभने यसले संज्ञाको गुण बताउँछ।"
+  },
+  {
+    "id": "grammar-q3",
+    "game_type": "grammar_shooter",
+    "question": "कुन शब्द क्रिया हो?",
+    "options": ["मान्छे", "ठूलो", "पढ्नु", "रातो"],
+    "correct_answer": 2,
+    "difficulty": "easy",
+    "points": 10,
+    "category": "verb",
+    "explanation": "पढ्नु एक क्रिया शब्द हो किनभने यसले काम बुझाउँछ।"
+  },
+  {
+    "id": "grammar-q4",
+    "game_type": "grammar_shooter",
+    "question": "कुन वाक्य शुद्ध छ?",
+    "options": ["म स्कुल जान्छु", "म स्कुल जान्छ", "म स्कुल जाछु", "म स्कुल जाउँछु"],
+    "correct_answer": 0,
+    "difficulty": "medium",
+    "points": 15,
+    "category": "grammar",
+    "explanation": "म स्कुल जान्छु शुद्ध वाक्य हो किनभने यसमा सही क्रियाको रूप प्रयोग भएको छ।"
+  },
+  {
+    "id": "grammar-q5",
+    "game_type": "grammar_shooter",
+    "question": "कुन शब्द सर्वनाम हो?",
+    "options": ["केटा", "उ", "हरियो", "बोल्नु"],
+    "correct_answer": 1,
+    "difficulty": "easy",
+    "points": 10,
+    "category": "pronoun",
+    "explanation": "उ एक सर्वनाम शब्द हो किनभने यसले संज्ञाको सट्टामा प्रयोग हुन्छ।"
+  }
+]
