@@ -24,7 +24,7 @@ const LoginPage = () => {
   
   // Form state
   const [formData, setFormData] = useState({
-    email: '',
+    email: '', // Backend expects 'email' field (but accepts username or email)
     password: '',
   });
   
@@ -94,14 +94,14 @@ const LoginPage = () => {
         
         <Form onSubmit={handleSubmit}>
           <InputGroup>
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Username or Email</Label>
             <Input
               id="email"
-              type="email"
+              type="text"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="your.email@example.com"
+              placeholder="username or your.email@example.com"
               required
               disabled={loading}
             />

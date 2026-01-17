@@ -123,7 +123,24 @@ const translations = {
     story_writing: 'कथा लेखन',
     essay_writing: 'निबन्ध लेखन',
     application_writing: 'आवेदन लेखन',
-    creative_writing: 'रचनात्मक लेखन'
+    creative_writing: 'रचनात्मक लेखन',
+    writing_practice_title: 'लेखन अभ्यास',
+    story_writing_desc: 'रचनात्मक कथाहरू लेख्नुहोस्',
+    essay_writing_desc: 'विषयमा आधारित निबन्ध',
+    application_writing_desc: 'औपचारिक आवेदनहरू',
+    creative_writing_desc: 'कविता र रचनाहरू',
+    word_count: 'शब्द संख्या',
+    save_writing: 'सुरक्षित गर्नुहोस्',
+    learning_content: 'सिकाइ सामग्री',
+    writing_saved: 'तपाईंको लेखन सुरक्षित भयो!',
+    points_earned: 'अंक प्राप्त!',
+    lessons_completed: 'पूरा भएका पाठ',
+    your_achievements: 'तपाईंका उपलब्धिहरू',
+    select_writing_type: 'लेखन प्रकार चयन गर्नुहोस्',
+    story: 'कथा',
+    essay: 'निबन्ध',
+    poem: 'कविता',
+    letter: 'पत्र'
   },
   en: {
     // Navigation
@@ -238,7 +255,24 @@ const translations = {
     story_writing: 'Story Writing',
     essay_writing: 'Essay Writing',
     application_writing: 'Application Writing',
-    creative_writing: 'Creative Writing'
+    creative_writing: 'Creative Writing',
+    writing_practice_title: 'Writing Practice',
+    story_writing_desc: 'Write creative stories',
+    essay_writing_desc: 'Topic-based essays',
+    application_writing_desc: 'Formal applications',
+    creative_writing_desc: 'Poetry and compositions',
+    word_count: 'Word Count',
+    save_writing: 'Save Writing',
+    learning_content: 'Learning Content',
+    writing_saved: 'Your writing has been saved!',
+    points_earned: 'Points Earned!',
+    lessons_completed: 'Lessons Completed',
+    your_achievements: 'Your Achievements',
+    select_writing_type: 'Select Writing Type',
+    story: 'Story',
+    essay: 'Essay',
+    poem: 'Poem',
+    letter: 'Letter'
   }
 };
 

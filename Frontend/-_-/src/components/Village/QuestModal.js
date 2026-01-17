@@ -175,75 +175,7 @@ const getColorByDifficulty = (difficulty) => {
   return colors[difficulty] || '#4169E1';
 };
 
-// Fallback quests if API fails
-const fallbackQuests = [
-  {
-    id: 'grammar-basic',
-    type: 'grammar',
-    name: 'व्याकरणका आधारभूत कुराहरू',
-    description: 'संज्ञा, सर्वनाम र विशेषणको बारेमा सिक्नुहोस्',
-    icon: Book,
-    color: '#4169E1',
-    difficulty: 'easy',
-    reward: { coins: 50, knowledge: 30, books: 1 },
-    minLevel: 1
-  },
-  {
-    id: 'vocabulary-animals',
-    type: 'vocabulary',
-    name: 'जनावरहरूका नामहरू',
-    description: 'विभिन्न जनावरहरूका नाम सिक्नुहोस्',
-    icon: Target,
-    color: '#FF6B6B',
-    difficulty: 'easy',
-    reward: { coins: 40, knowledge: 25, books: 0 },
-    minLevel: 1
-  },
-  {
-    id: 'writing-story',
-    type: 'writing',
-    name: 'कथा लेखन',
-    description: 'साधारण कथा लेख्न सिक्नुहोस्',
-    icon: PenTool,
-    color: '#51CF66',
-    difficulty: 'medium',
-    reward: { coins: 75, knowledge: 45, books: 2 },
-    minLevel: 2
-  },
-  {
-    id: 'grammar-advanced',
-    type: 'grammar',
-    name: 'उन्नत व्याकरण',
-    description: 'क्रिया, क्रियाविशेषण र वाक्य संरचनाको बारेमा सिक्नुहोस्',
-    icon: Book,
-    color: '#4169E1',
-    difficulty: 'hard',
-    reward: { coins: 100, knowledge: 60, books: 3 },
-    minLevel: 3
-  },
-  {
-    id: 'vocabulary-advanced',
-    type: 'vocabulary',
-    name: 'उन्नत शब्दावली',
-    description: 'कठिन शब्दहरू र मुहावराहरू सिक्नुहोस्',
-    icon: Target,
-    color: '#FF6B6B',
-    difficulty: 'hard',
-    reward: { coins: 90, knowledge: 55, books: 2 },
-    minLevel: 3
-  },
-  {
-    id: 'writing-essay',
-    type: 'writing',
-    name: 'निबन्ध लेखन',
-    description: 'औपचारिक निबन्ध लेख्न सिक्नुहोस्',
-    icon: PenTool,
-    color: '#51CF66',
-    difficulty: 'hard',
-    reward: { coins: 125, knowledge: 70, books: 4 },
-    minLevel: 4
-  }
-];
+// No fallback quests - fetch from backend only
 
 const QuestModal = ({ onClose, onComplete, villageLevel }) => {
   const [selectedQuest, setSelectedQuest] = useState(null);
@@ -258,8 +190,12 @@ const QuestModal = ({ onClose, onComplete, villageLevel }) => {
         setLoading(true);
         const response = await getQuests();
         
-        if (response && response.data) {
-          const transformedQuests = response.data.map(quest => ({
+        // Response IS the data object directly (not wrapped in .data)
+        // API returns: { results: [...], count, next, previous }
+        const questData = response?.results || [];
+        
+        if (questData.length > 0) {
+          const transformedQuests = questData.map(quest => ({
             id: quest.id,
             type: quest.category || 'general',
             name: quest.name_nepali || quest.name,
@@ -274,12 +210,14 @@ const QuestModal = ({ onClose, onComplete, villageLevel }) => {
             },
             minLevel: quest.min_level
           }));
+          console.log('✅ Transformed Quests:', transformedQuests);
           setQuests(transformedQuests);
+        } else {
+          setQuests([]);
         }
       } catch (error) {
         console.error('Failed to fetch quests:', error);
-        // Fallback to hardcoded quests if API fails
-        setQuests(fallbackQuests);
+        setQuests([]);
       } finally {
         setLoading(false);
       }

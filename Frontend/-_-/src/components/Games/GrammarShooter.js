@@ -201,34 +201,7 @@ const PlayButton = styled.button`
   }
 `;
 
-// Fallback grammar questions for Class 4 Nepali
-const fallbackGrammarQuestions = [
-  {
-    question: "कुन शब्द संज्ञा हो?",
-    options: ["राम्रो", "किताब", "दौडिरहेको", "चाँडो"],
-    correct: 1
-  },
-  {
-    question: "कुन शब्द विशेषण हो?",
-    options: ["घर", "सुन्दर", "खेल्नु", "हिँड्नु"],
-    correct: 1
-  },
-  {
-    question: "कुन शब्द क्रिया हो?",
-    options: ["मान्छे", "ठूलो", "पढ्नु", "रातो"],
-    correct: 2
-  },
-  {
-    question: "कुन वाक्य शुद्ध छ?",
-    options: ["म स्कुल जान्छु", "म स्कुल जान्छ", "म स्कुल जाछु", "म स्कुल जाउँछु"],
-    correct: 0
-  },
-  {
-    question: "कुन शब्द सर्वनाम हो?",
-    options: ["केटा", "उ", "हरियो", "बोल्नु"],
-    correct: 1
-  }
-];
+// No fallback questions - fetch from backend only
 
 const GrammarShooter = () => {
   const [gameState, setGameState] = useState('menu'); // menu, playing, gameOver
@@ -251,19 +224,27 @@ const GrammarShooter = () => {
         setLoading(true);
         const response = await getGrammarShooterQuestions();
         
-        if (response && response.data) {
-          const transformedQuestions = response.data.map(q => ({
+        // Response IS the data object directly (not wrapped in .data)
+        // API returns: { success, timestamp, data: { questions: [...] } }
+        // But our API wrapper returns the data directly: { questions: [...] }
+        const questions = response?.questions || [];
+        
+        if (questions.length > 0) {
+          const transformedQuestions = questions.map(q => ({
             question: q.question_text_nepali || q.question_text,
-            options: q.options || [],
-            correct: q.correct_answer?.index || 0
+            options: q.options?.map(opt => opt.text || opt) || [],
+            correct: q.correct_answer?.answer === 'A' ? 0 : 
+                     q.correct_answer?.answer === 'B' ? 1 :
+                     q.correct_answer?.answer === 'C' ? 2 : 3
           }));
+          
           setGrammarQuestions(transformedQuestions);
         } else {
-          setGrammarQuestions(fallbackGrammarQuestions);
+          setGrammarQuestions([]);
         }
       } catch (error) {
         console.error('Failed to fetch questions:', error);
-        setGrammarQuestions(fallbackGrammarQuestions);
+        setGrammarQuestions([]);
       } finally {
         setLoading(false);
       }

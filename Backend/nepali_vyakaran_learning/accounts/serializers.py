@@ -4,12 +4,55 @@ Handles user registration, authentication, and profile management.
 """
 
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.password_validation import validate_password
 from dj_rest_auth.registration.serializers import RegisterSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from .models import GameState, UserSettings, OTPVerification, ActivityLog
 
 User = get_user_model()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """
+    Custom JWT token serializer that accepts username or email for login.
+    Works with EmailOrUsernameBackend to accept either username or email in the 'email' field.
+    """
+    # Override to use 'email' field but accept username too
+    username_field = 'email'
+    
+    def validate(self, attrs):
+        # The 'email' field can contain either username or email
+        # EmailOrUsernameBackend will handle both
+        username_or_email = attrs.get('email')  # Get from 'email' field
+        password = attrs.get('password')
+        
+        # Authenticate using custom backend (username or email)
+        user = authenticate(
+            request=self.context.get('request'),
+            username=username_or_email,  # Pass as 'username' to backend
+            password=password
+        )
+        
+        if user is None:
+            raise serializers.ValidationError({
+                'detail': 'Invalid credentials. Please check your username/email and password.'
+            })
+        
+        if not user.is_active:
+            raise serializers.ValidationError({
+                'detail': 'User account is disabled.'
+            })
+        
+        # Generate tokens
+        refresh = self.get_token(user)
+        
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+        
+        return data
 
 
 class CustomRegisterSerializer(RegisterSerializer):

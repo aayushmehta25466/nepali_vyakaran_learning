@@ -157,6 +157,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Custom User Model
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
+# Custom Authentication Backends - allow login with username or email
+AUTHENTICATION_BACKENDS = [
+    'accounts.authentication.EmailOrUsernameBackend',  # Custom backend for username/email login
+    'django.contrib.auth.backends.ModelBackend',       # Default backend
+]
+
 # Site ID for django-allauth
 SITE_ID = 1
 

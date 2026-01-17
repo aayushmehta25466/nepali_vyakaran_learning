@@ -23,7 +23,7 @@ from .serializers import (
     PasswordChangeSerializer, OTPRequestSerializer, OTPVerifySerializer,
     PasswordResetRequestSerializer, PasswordResetConfirmSerializer,
     ResetProgressSerializer, ActivityLogSerializer, UserStatsSerializer,
-    LeaderboardEntrySerializer
+    LeaderboardEntrySerializer, CustomTokenObtainPairSerializer
 )
 from .utils import (
     success_response, error_response,
@@ -40,22 +40,27 @@ User = get_user_model()
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     POST /api/v1/auth/login
-    User login with email and password.
+    User login with username or email and password.
     """
+    serializer_class = CustomTokenObtainPairSerializer
     
     @extend_schema(
         summary="User Login",
-        description="Authenticate user with email and password, returns JWT tokens",
+        description="Authenticate user with username/email and password, returns JWT tokens",
         tags=["Authentication"]
     )
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         
         if response.status_code == 200:
-            # Get user and log activity
-            email = request.data.get('email')
+            # Get user from email field (which can contain username or email)
+            username_or_email = request.data.get('email')
             try:
-                user = User.objects.get(email=email)
+                # Try to find user by username or email
+                from django.db.models import Q
+                user = User.objects.get(
+                    Q(username__iexact=username_or_email) | Q(email__iexact=username_or_email)
+                )
                 ActivityLog.log_activity(user, 'login', 'User logged in', request=request)
                 
                 # Include user data and game state in response

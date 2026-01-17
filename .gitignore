@@ -88,13 +88,9 @@ htmlcov/
 *.tmp
 *.temp
 
-# Nested Git Repositories (use submodules instead)
-Backend/**/.git/
-Frontend/**/.git/
-
 # Docker
 .dockerignore
 
-# docker files
-DOCKER*.md
-*.md
+# Specific documentation to ignore
+DOCKER_SETUP_GUIDE.md
+DOCKER_QUICK_REFERENCE.md
