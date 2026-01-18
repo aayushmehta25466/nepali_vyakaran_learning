@@ -1,5 +1,6 @@
 # IDE and Editor
 .vscode/
+.playwright-mcp/
 .idea/
 *.swp
 *.swo
@@ -99,4 +100,3 @@ FRONTEND*.md
 INTEGRATION*.md
 
 
-.playwright-mcp/
