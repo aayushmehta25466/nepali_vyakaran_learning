@@ -224,10 +224,8 @@ SIMPLE_JWT = {
 # DJANGO-ALLAUTH CONFIGURATION
 # =============================================================================
 
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
-]
+# NOTE: AUTHENTICATION_BACKENDS is already configured above (line 161-165)
+# with EmailOrUsernameBackend for username/email login support
 
 # Updated for django-allauth 65.x
 ACCOUNT_LOGIN_METHODS = {'email'}
