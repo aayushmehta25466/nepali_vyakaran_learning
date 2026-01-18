@@ -97,3 +97,6 @@ DOCKER_QUICK_REFERENCE.md
 
 FRONTEND*.md
 INTEGRATION*.md
+
+
+.playwright-mcp/

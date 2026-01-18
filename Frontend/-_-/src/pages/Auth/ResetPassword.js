@@ -173,6 +173,7 @@ const ResetPasswordPage = () => {
         email: formData.email,
         otp_code: formData.otp_code,
         new_password: formData.new_password,
+        confirm_password: formData.confirm_password,
       });
       
       // Show success message
