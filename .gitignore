@@ -94,3 +94,6 @@ htmlcov/
 # Specific documentation to ignore
 DOCKER_SETUP_GUIDE.md
 DOCKER_QUICK_REFERENCE.md
+
+FRONTEND*.md
+INTEGRATION*.md

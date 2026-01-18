@@ -1,341 +1,9 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useGame } from '../../contexts/GameContext';
 import { BookOpen, Gamepad2, PenTool, TrendingUp, Trophy, Zap, Award, Settings, Menu, X, Home, User } from 'lucide-react';
-
-const DashboardWrapper = styled.div`
-  display: flex;
-  min-height: calc(100vh - 60px);
-  background: #f5f5f5;
-  margin-top: 60px;
-`;
-
-const Sidebar = styled(motion.aside)`
-  width: 220px;
-  background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 20px 0;
-  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
-  overflow-y: auto;
-  position: fixed;
-  height: calc(100vh - 60px);
-  left: 0;
-  top: 60px;
-  z-index: 100;
-  
-  @media (max-width: 768px) {
-    width: 0;
-    transform: translateX(-100%);
-    transition: all 0.3s ease;
-    
-    ${props => props.isOpen && `
-      width: 220px;
-      transform: translateX(0);
-    `}
-  }
-`;
-
-const SidebarHeader = styled.div`
-  padding: 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 10px;
-`;
-
-const SidebarNav = styled.nav`
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-`;
-
-const SidebarLink = styled(Link)`
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  border-left: 4px solid transparent;
-  font-size: 0.95rem;
-  
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border-left-color: white;
-  }
-  
-  &.active {
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
-    border-left-color: white;
-    font-weight: 600;
-  }
-`;
-
-const SidebarDivider = styled.div`
-  height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 20px 0;
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-  margin-left: 220px;
-  padding: 40px 30px;
-  background: white;
-  min-height: calc(100vh - 60px);
-  
-  @media (max-width: 768px) {
-    margin-left: 0;
-  }
-`;
-
-const TopBar = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  gap: 20px;
-`;
-
-const PageTitle = styled.h1`
-  font-size: 2rem;
-  color: #333;
-  margin: 0;
-  font-weight: 700;
-`;
-
-const MenuToggle = styled.button`
-  display: none;
-  background: linear-gradient(45deg, #667eea, #764ba2);
-  color: white;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 20px;
-  
-  @media (max-width: 768px) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-`;
-
-const ContentSection = styled.section`
-  margin-bottom: 50px;
-`;
-
-const SectionTitle = styled.h2`
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 25px;
-  font-weight: 600;
-`;
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 50px;
-`;
-
-const StatCard = styled(motion.div)`
-  background: linear-gradient(135deg, white 0%, #f8f9ff 100%);
-  border-radius: 20px;
-  padding: 30px;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-  border: 2px solid transparent;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-    opacity: 0;
-    transition: opacity 0.4s ease;
-  }
-  
-  &:hover {
-    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.3);
-    transform: translateY(-8px) scale(1.03);
-    border-color: #667eea;
-    
-    &::before {
-      opacity: 1;
-    }
-  }
-  
-  &:active {
-    transform: translateY(-4px) scale(1.01);
-  }
-`;
-
-const StatIcon = styled.div`
-  width: 70px;
-  height: 70px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 20px;
-  color: white;
-  font-size: 32px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  
-  ${StatCard}:hover & {
-    transform: scale(1.15) rotate(5deg);
-    box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
-  }
-`;
-
-const StatValue = styled.div`
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #333;
-  margin-bottom: 8px;
-  transition: all 0.3s ease;
-  position: relative;
-  z-index: 1;
-  
-  ${StatCard}:hover & {
-    color: #667eea;
-    transform: scale(1.1);
-  }
-`;
-
-const StatLabel = styled.div`
-  color: #666;
-  font-weight: 500;
-  font-size: 0.95rem;
-`;
-
-const ActivitiesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 25px;
-`;
-
-const ActivityCard = styled(motion.div)`
-  background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
-  border-radius: 20px;
-  padding: 35px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-  border: 3px solid transparent;
-  position: relative;
-  overflow: hidden;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    transform: scaleX(0);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  &:hover {
-    transform: translateY(-12px) scale(1.02);
-    box-shadow: 0 16px 40px rgba(102, 126, 234, 0.3);
-    border-color: #667eea;
-    
-    &::before {
-      transform: scaleX(1);
-    }
-  }
-  
-  &:active {
-    transform: translateY(-8px) scale(1);
-  }
-`;
-
-const ActivityIcon = styled.div`
-  font-size: 55px;
-  margin-bottom: 20px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  ${ActivityCard}:hover & {
-    transform: scale(1.2) rotate(-5deg);
-  }
-`;
-
-const ActivityTitle = styled.h3`
-  font-size: 1.4rem;
-  color: #333;
-  margin-bottom: 12px;
-  font-weight: 700;
-  transition: color 0.3s ease;
-  
-  ${ActivityCard}:hover & {
-    color: #667eea;
-  }
-`;
-
-const ActivityDescription = styled.p`
-  color: #666;
-  font-size: 0.95rem;
-  margin-bottom: 15px;
-  line-height: 1.5;
-`;
-
-const ActivityButton = styled.span`
-  color: #667eea;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  font-size: 1.05rem;
-  
-  ${ActivityCard}:hover & {
-    gap: 15px;
-    color: #764ba2;
-  }
-`;
-
-const Overlay = styled.div`
-  display: none;
-  position: fixed;
-  top: 60px;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 99;
-  
-  @media (max-width: 768px) {
-    ${props => props.isOpen && `
-      display: block;
-    `}
-  }
-`;
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -346,189 +14,187 @@ const Dashboard = () => {
   const isActive = (path) => location.pathname === path;
 
   const navItems = [
-    {
-      icon: <TrendingUp size={20} />,
-      label: t('dashboard'),
-      path: '/dashboard'
-    },
-    {
-      icon: <Home size={20} />,
-      label: t('village'),
-      path: '/village'
-    },
-    {
-      icon: <BookOpen size={20} />,
-      label: t('lessons'),
-      path: '/lessons'
-    },
-    {
-      icon: <Gamepad2 size={20} />,
-      label: t('games'),
-      path: '/games'
-    },
-    {
-      icon: <PenTool size={20} />,
-      label: t('writing'),
-      path: '/writing'
-    },
-    {
-      icon: <Award size={20} />,
-      label: t('progress'),
-      path: '/progress'
-    }
+    { icon: <TrendingUp size={20} />, label: t('dashboard'), path: '/dashboard' },
+    { icon: <Home size={20} />, label: t('village'), path: '/village' },
+    { icon: <BookOpen size={20} />, label: t('lessons'), path: '/lessons' },
+    { icon: <Gamepad2 size={20} />, label: t('games'), path: '/games' },
+    { icon: <PenTool size={20} />, label: t('writing'), path: '/writing' },
+    { icon: <Award size={20} />, label: t('progress'), path: '/progress' }
   ];
 
   const activities = [
-    {
-      icon: '📚',
-      title: t('lessons'),
-      description: t('lessons_desc'),
-      link: '/lessons'
-    },
-    {
-      icon: '🎮',
-      title: t('games'),
-      description: t('games_desc'),
-      link: '/games'
-    },
-    {
-      icon: '✍️',
-      title: t('writing'),
-      description: t('writing_desc'),
-      link: '/writing'
-    },
-    {
-      icon: '📊',
-      title: t('progress'),
-      description: t('progress_desc'),
-      link: '/progress'
-    }
+    { icon: '📚', title: t('lessons'), description: t('lessons_desc'), link: '/lessons' },
+    { icon: '🎮', title: t('games'), description: t('games_desc'), link: '/games' },
+    { icon: '✍️', title: t('writing'), description: t('writing_desc'), link: '/writing' },
+    { icon: '📊', title: t('progress'), description: t('progress_desc'), link: '/progress' }
+  ];
+
+  const stats = [
+    { icon: <Trophy />, value: gameState.level, label: t('level'), delay: 0 },
+    { icon: <TrendingUp />, value: gameState.points, label: t('points'), delay: 0.1 },
+    { icon: <Award />, value: gameState.coins, label: t('coins'), delay: 0.2 },
+    { icon: <Zap />, value: gameState.currentStreak, label: t('current_streak'), delay: 0.3 }
   ];
 
   return (
-    <DashboardWrapper>
-      <Overlay isOpen={sidebarOpen} onClick={() => setSidebarOpen(false)} />
-      
-      <Sidebar
-        isOpen={sidebarOpen}
-      >
-        <SidebarHeader />
+    <div className="flex min-h-[calc(100vh-60px)] bg-gray-100 mt-[60px]">
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 top-[60px] bg-black/50 z-[99] md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-        <SidebarNav>
+      {/* Sidebar */}
+      <motion.aside
+        className={`
+          w-[220px] bg-gradient-to-b from-primary to-primary-dark text-white
+          py-5 shadow-lg overflow-y-auto fixed h-[calc(100vh-60px)] left-0 top-[60px] z-[100]
+          transition-transform duration-300 ease-in-out
+          md:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+      >
+        <div className="border-b border-white/20 mb-2.5" />
+
+        <nav className="flex flex-col">
           {navItems.map((item, index) => (
-            <SidebarLink
+            <Link
               key={index}
               to={item.path}
-              className={isActive(item.path) ? 'active' : ''}
               onClick={() => setSidebarOpen(false)}
+              className={`
+                flex items-center gap-3 px-4 py-3 text-white/85 no-underline
+                transition-all duration-300 border-l-4 border-transparent text-[0.95rem]
+                hover:bg-white/10 hover:text-white hover:border-l-white
+                ${isActive(item.path) ? 'bg-white/15 text-white border-l-white font-semibold' : ''}
+              `}
             >
               {item.icon}
               <span>{item.label}</span>
-            </SidebarLink>
+            </Link>
           ))}
-        </SidebarNav>
+        </nav>
 
-        <SidebarDivider />
+        <div className="h-px bg-white/20 my-5" />
 
-        <SidebarNav>
-          <SidebarLink to="/profile">
+        <nav className="flex flex-col">
+          <Link
+            to="/profile"
+            className="flex items-center gap-3 px-4 py-3 text-white/85 no-underline
+              transition-all duration-300 border-l-4 border-transparent text-[0.95rem]
+              hover:bg-white/10 hover:text-white hover:border-l-white"
+          >
             <User size={20} />
             <span>{t('profile')}</span>
-          </SidebarLink>
-          <SidebarLink to="/settings">
+          </Link>
+          <Link
+            to="/settings"
+            className="flex items-center gap-3 px-4 py-3 text-white/85 no-underline
+              transition-all duration-300 border-l-4 border-transparent text-[0.95rem]
+              hover:bg-white/10 hover:text-white hover:border-l-white"
+          >
             <Settings size={20} />
             <span>{t('settings')}</span>
-          </SidebarLink>
-        </SidebarNav>
-      </Sidebar>
+          </Link>
+        </nav>
+      </motion.aside>
 
-      <MainContent>
-        <TopBar>
+      {/* Main Content */}
+      <main className="flex-1 ml-0 md:ml-[220px] p-6 md:p-8 bg-white min-h-[calc(100vh-60px)]">
+        {/* Top Bar */}
+        <div className="flex justify-between items-center mb-8 gap-5">
           <div>
-            <PageTitle>{t('dashboard_title')}</PageTitle>
-            <p style={{ color: '#666', margin: '5px 0 0 0' }}>{t('welcome_subtitle')}</p>
+            <h1 className="text-2xl md:text-3xl text-gray-800 m-0 font-bold font-nepali">
+              {t('dashboard_title')}
+            </h1>
+            <p className="text-gray-500 mt-1 font-nepali">{t('welcome_subtitle')}</p>
           </div>
-          <MenuToggle onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <button
+            className="flex md:hidden items-center justify-center w-10 h-10 rounded-lg
+              bg-gradient-to-r from-primary to-primary-dark text-white border-none cursor-pointer"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
             {sidebarOpen ? <X /> : <Menu />}
-          </MenuToggle>
-        </TopBar>
+          </button>
+        </div>
 
-        <ContentSection>
-          <SectionTitle>{t('my_progress')}</SectionTitle>
-          <StatsGrid>
-            <StatCard
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0 }}
-            >
-              <StatIcon>
-                <Trophy />
-              </StatIcon>
-              <StatValue>{gameState.level}</StatValue>
-              <StatLabel>{t('level')}</StatLabel>
-            </StatCard>
+        {/* Stats Section */}
+        <section className="mb-10">
+          <h2 className="text-xl text-gray-800 mb-5 font-semibold font-nepali">
+            {t('my_progress')}
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: stat.delay }}
+                className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 text-center
+                  shadow-md hover:shadow-xl hover:-translate-y-2 hover:scale-[1.03]
+                  hover:border-primary transition-all duration-400 cursor-pointer
+                  border-2 border-transparent relative overflow-hidden group"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-dark rounded-full
+                  flex items-center justify-center mx-auto mb-3 text-white
+                  shadow-md group-hover:scale-110 group-hover:rotate-[5deg] transition-all duration-400">
+                  {stat.icon}
+                </div>
+                <div className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-1
+                  group-hover:text-primary group-hover:scale-110 transition-all duration-300">
+                  {stat.value}
+                </div>
+                <div className="text-gray-500 font-medium text-sm font-nepali">
+                  {stat.label}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
 
-            <StatCard
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <StatIcon>
-                <TrendingUp />
-              </StatIcon>
-              <StatValue>{gameState.points}</StatValue>
-              <StatLabel>{t('points')}</StatLabel>
-            </StatCard>
-
-            <StatCard
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <StatIcon>
-                <Award />
-              </StatIcon>
-              <StatValue>{gameState.coins}</StatValue>
-              <StatLabel>{t('coins')}</StatLabel>
-            </StatCard>
-
-            <StatCard
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <StatIcon>
-                <Zap />
-              </StatIcon>
-              <StatValue>{gameState.currentStreak}</StatValue>
-              <StatLabel>{t('current_streak')}</StatLabel>
-            </StatCard>
-          </StatsGrid>
-        </ContentSection>
-
-        <ContentSection>
-          <SectionTitle>{t('continue_learning')}</SectionTitle>
-          <ActivitiesGrid>
+        {/* Activities Section */}
+        <section className="mb-10">
+          <h2 className="text-xl text-gray-800 mb-5 font-semibold font-nepali">
+            {t('continue_learning')}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {activities.map((activity, index) => (
-              <Link key={index} to={activity.link} style={{ textDecoration: 'none' }}>
-                <ActivityCard
+              <Link key={index} to={activity.link} className="no-underline text-inherit">
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6
+                    shadow-md hover:shadow-xl hover:-translate-y-3 hover:scale-[1.02]
+                    hover:border-primary transition-all duration-400 cursor-pointer
+                    border-3 border-transparent relative overflow-hidden group
+                    before:content-[''] before:absolute before:top-0 before:left-0 before:right-0
+                    before:h-1 before:bg-gradient-to-r before:from-primary before:to-primary-dark
+                    before:scale-x-0 before:transition-transform before:duration-400
+                    hover:before:scale-x-100"
                 >
-                  <ActivityIcon>{activity.icon}</ActivityIcon>
-                  <ActivityTitle>{activity.title}</ActivityTitle>
-                  <ActivityDescription>{activity.description}</ActivityDescription>
-                  <ActivityButton>
+                  <div className="text-4xl mb-4 group-hover:scale-120 group-hover:-rotate-[5deg] transition-all duration-400">
+                    {activity.icon}
+                  </div>
+                  <h3 className="text-lg text-gray-800 mb-2 font-bold group-hover:text-primary transition-colors duration-300 font-nepali">
+                    {activity.title}
+                  </h3>
+                  <p className="text-gray-500 text-sm mb-3 leading-relaxed font-nepali">
+                    {activity.description}
+                  </p>
+                  <span className="text-primary font-bold inline-flex items-center gap-2
+                    group-hover:gap-4 group-hover:text-primary-dark transition-all duration-300">
                     {t('continue')} →
-                  </ActivityButton>
-                </ActivityCard>
+                  </span>
+                </motion.div>
               </Link>
             ))}
-          </ActivitiesGrid>
-        </ContentSection>
-      </MainContent>
-    </DashboardWrapper>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 };
 
