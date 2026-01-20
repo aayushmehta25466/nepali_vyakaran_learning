@@ -11,13 +11,24 @@ Usage:
 import os
 import django
 import sys
+import random
+import argparse
+from datetime import datetime, timedelta
 
 # Setup Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'nepali_vyakaran_learning.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
-from learning_vyakaran.models import Category, Lesson, Quiz, Question
+from django.utils import timezone
+from accounts.models import GameState, UserSettings, ActivityLog
+from learning_vyakaran.models import (
+    Category, Lesson, LessonProgress, Quiz, Question, QuizResult,
+    Village, BuildingType, VillageBuilding,
+    Quest, QuestProgress, Achievement, UserAchievement,
+    Badge, UserBadge, WritingPrompt, WritingSubmission,
+    Game, GameSession
+)
 
 User = get_user_model()
 
@@ -796,38 +807,682 @@ class LessonDataPopulator:
             return False
 
 
+class GamificationGenerator:
+    def __init__(self):
+        self.users = []
+        self.lessons = []
+        self.quizzes = []
+        self.quests = []
+        self.achievements = []
+        self.badges = []
+        self.games = []
+        self.writing_prompts = []
+        self.building_types = []
+    
+    def clear_gamification_data(self):
+        """Clear existing gamification and user data"""
+        print_section("Clearing Gamification Data")
+        
+        # Keep superuser, delete test users
+        User.objects.filter(is_superuser=False).delete()
+        print_success("Cleared test users")
+        
+        # Clear all learning progress (but not content)
+        LessonProgress.objects.all().delete()
+        QuizResult.objects.all().delete()
+        
+        # Clear gamification
+        VillageBuilding.objects.all().delete()
+        Village.objects.all().delete()
+        BuildingType.objects.all().delete()
+        QuestProgress.objects.all().delete()
+        Quest.objects.all().delete()
+        UserAchievement.objects.all().delete()
+        Achievement.objects.all().delete()
+        UserBadge.objects.all().delete()
+        Badge.objects.all().delete()
+        
+        # Clear games
+        GameSession.objects.all().delete()
+        Game.objects.all().delete()
+        
+        # Clear writing
+        WritingSubmission.objects.all().delete()
+        WritingPrompt.objects.all().delete()
+        
+        print_success("Gamification data cleared")
+
+    def load_content(self):
+        """Load existing lessons and quizzes"""
+        print_section("Loading Content")
+        self.lessons = list(Lesson.objects.all())
+        self.quizzes = list(Quiz.objects.all())
+        print_success(f"Loaded {len(self.lessons)} lessons and {len(self.quizzes)} quizzes")
+
+    def create_users(self, count=10):
+        """Create test users with varying levels"""
+        print_section(f"Creating {count} Test Users")
+        
+        for i in range(count):
+            username = f"testuser{i+1}"
+            email = f"testuser{i+1}@test.com"
+            
+            # Check if user exists
+            if User.objects.filter(username=username).exists():
+                user = User.objects.get(username=username)
+            else:
+                user = User.objects.create_user(
+                    username=username,
+                    email=email,
+                    password="TestPass123!",
+                    first_name=f"Test",
+                    last_name=f"User{i+1}",
+                    bio=f"I'm test user number {i+1}, learning Nepali grammar!"
+                )
+            
+            # Create game state with varying progress if not exists
+            if not hasattr(user, 'gamestate'):
+                level = random.randint(1, 10)
+                points = level * random.randint(100, 500)
+                
+                GameState.objects.create(
+                    user=user,
+                    level=level,
+                    points=points,
+                    coins=random.randint(50, 500),
+                    experience=points,
+                    current_streak=random.randint(0, 30),
+                    longest_streak=random.randint(0, 50),
+                    total_correct_answers=random.randint(0, 200),
+                    total_questions_attempted=random.randint(0, 300)
+                )
+            
+            # Create user settings
+            if not hasattr(user, 'usersettings'):
+                UserSettings.objects.create(
+                    user=user,
+                    language=random.choice(['en', 'ne']),
+                    theme=random.choice(['light', 'dark', 'system']),
+                    email_notifications=random.choice([True, False]),
+                    push_notifications=random.choice([True, False]),
+                    reminder_notifications=random.choice([True, False]),
+                    achievement_notifications=random.choice([True, False]),
+                    sound_enabled=random.choice([True, False]),
+                    music_enabled=random.choice([True, False]),
+                    animations_enabled=True,
+                    difficulty=random.choice(['easy', 'medium', 'hard', 'adaptive']),
+                    daily_goal_minutes=random.choice([10, 15, 20, 30]),
+                    profile_public=True,
+                    show_on_leaderboard=True
+                )
+            
+            # Create village
+            if not hasattr(user, 'village'):
+                Village.objects.create(
+                    user=user,
+                    level=random.randint(1, 5),
+                    experience=random.randint(0, 1000),
+                    coins=random.randint(100, 1000),
+                    knowledge_points=random.randint(0, 500),
+                    books=random.randint(0, 50),
+                    energy=random.randint(50, 100)
+                )
+            
+            self.users.append(user)
+            print_success(f"Created/found user: {username}")
+
+    def create_user_progress(self):
+        """Create lesson and quiz progress for users"""
+        print_section("Creating User Progress")
+        
+        if not self.lessons:
+            print_warning("No lessons found. Skipping progress generation.")
+            return
+
+        for user in self.users:
+            # Random lesson progress
+            sample_size = min(len(self.lessons), random.randint(5, 15))
+            completed_lessons = random.sample(self.lessons, k=sample_size)
+            
+            for lesson in completed_lessons:
+                completed_time = timezone.now() - timedelta(days=random.randint(0, 30))
+                LessonProgress.objects.create(
+                    user=user,
+                    lesson=lesson,
+                    status='completed',
+                    score=random.randint(60, 100),
+                    best_score=random.randint(70, 100),
+                    time_spent=random.randint(300, 1800),
+                    attempts=random.randint(1, 3),
+                    started_at=completed_time - timedelta(hours=1),
+                    completed_at=completed_time,
+                    progress_data={'exercises_completed': random.randint(5, 10)}
+                )
+            
+            print_success(f"Created progress for {user.username}: {len(completed_lessons)} lessons")
+            
+            # Random quiz results
+            if self.quizzes:
+                sample_size_quiz = min(len(self.quizzes), random.randint(3, 8))
+                taken_quizzes = random.sample(self.quizzes, k=sample_size_quiz)
+                for quiz in taken_quizzes:
+                    score = random.randint(50, 100)
+                    total_questions = quiz.questions.count()
+                    if total_questions == 0: continue
+                    
+                    correct = int(total_questions * score / 100)
+                    completed_time = timezone.now() - timedelta(days=random.randint(0, 30))
+                    
+                    QuizResult.objects.create(
+                        user=user,
+                        quiz=quiz,
+                        score=score,
+                        percentage=float(score),
+                        correct_answers=correct,
+                        total_questions=total_questions,
+                        time_spent=random.randint(300, 1500),
+                        session_id=f"session_{random.randint(1000, 9999)}",
+                        started_at=completed_time - timedelta(minutes=random.randint(10, 30)),
+                        answers=[{'question_id': str(q.id), 'answer': 'A'} for q in quiz.questions.all()[:correct]],
+                        feedback=[],
+                        points_earned=quiz.points_reward,
+                        coins_earned=quiz.coins_reward,
+                        passed=score >= quiz.pass_percentage
+                    )
+                
+                print_success(f"Created quiz results for {user.username}: {len(taken_quizzes)} quizzes")
+
+    def create_quests(self):
+        """Create quests"""
+        print_section("Creating Quests")
+        
+        quests_data = [
+            {
+                'name': 'Grammar Master',
+                'name_nepali': 'व्याकरण मास्टर',
+                'description': 'Complete 5 grammar lessons',
+                'description_nepali': '५ व्याकरण पाठ पूरा गर्नुहोस्',
+                'quest_type': 'daily',
+                'category': 'grammar',
+                'difficulty': 'easy',
+                'requirements': {'lessons_count': 5, 'category': 'grammar-basics'},
+                'points_reward': 100,
+                'coins_reward': 50,
+                'experience_reward': 30,
+                'min_level': 1,
+                'is_active': True
+            },
+            {
+                'name': 'Daily Practice',
+                'name_nepali': 'दैनिक अभ्यास',
+                'description': 'Complete any lesson today',
+                'description_nepali': 'आज कुनै पनि पाठ पूरा गर्नुहोस्',
+                'quest_type': 'daily',
+                'category': 'general',
+                'difficulty': 'easy',
+                'requirements': {'lessons_count': 1},
+                'points_reward': 20,
+                'coins_reward': 10,
+                'experience_reward': 5,
+                'min_level': 1,
+                'is_active': True
+            },
+            {
+                'name': 'Quiz Champion',
+                'name_nepali': 'प्रश्नोत्तरी च्याम्पियन',
+                'description': 'Pass 3 quizzes with 80% or higher',
+                'description_nepali': '३ प्रश्नोत्तरी ८०% वा बढी अंकमा पास गर्नुहोस्',
+                'quest_type': 'weekly',
+                'category': 'general',
+                'difficulty': 'medium',
+                'requirements': {'quizzes_count': 3, 'min_score': 80},
+                'points_reward': 150,
+                'coins_reward': 75,
+                'experience_reward': 50,
+                'min_level': 3,
+                'is_active': True
+            },
+            {
+                'name': 'Vocabulary Builder',
+                'name_nepali': 'शब्दावली निर्माता',
+                'description': 'Complete all vocabulary lessons',
+                'description_nepali': 'सबै शब्दावली पाठ पूरा गर्नुहोस्',
+                'quest_type': 'story',
+                'category': 'vocabulary',
+                'difficulty': 'hard',
+                'requirements': {'category': 'vocabulary', 'complete_all': True},
+                'points_reward': 200,
+                'coins_reward': 100,
+                'experience_reward': 80,
+                'min_level': 5,
+                'is_active': True
+            }
+        ]
+        
+        for data in quests_data:
+            quest = Quest.objects.create(**data)
+            self.quests.append(quest)
+            print_success(f"Created quest: {quest.name}")
+
+    def create_achievements_and_badges(self):
+        """Create achievements and badges"""
+        print_section("Creating Achievements & Badges")
+        
+        # Achievements
+        achievements_data = [
+            {
+                'name': 'First Steps',
+                'name_nepali': 'पहिलो कदम',
+                'description': 'Complete your first lesson',
+                'description_nepali': 'आफ्नो पहिलो पाठ पूरा गर्नुहोस्',
+                'icon': 'first_steps',
+                'rarity': 'common',
+                'criteria': {'lessons_completed': 1},
+                'points_reward': 10,
+                'coins_reward': 5,
+                'is_hidden': False,
+                'is_active': True
+            },
+            {
+                'name': 'Dedicated Learner',
+                'name_nepali': 'समर्पित सिकारु',
+                'description': 'Maintain a 7-day streak',
+                'description_nepali': '७ दिनको स्ट्रीक कायम राख्नुहोस्',
+                'icon': 'fire',
+                'rarity': 'rare',
+                'criteria': {'streak_days': 7},
+                'points_reward': 50,
+                'coins_reward': 25,
+                'is_hidden': False,
+                'is_active': True
+            },
+            {
+                'name': 'Grammar Expert',
+                'name_nepali': 'व्याकरण विशेषज्ञ',
+                'description': 'Complete all grammar lessons',
+                'description_nepali': 'सबै व्याकरण पाठ पूरा गर्नुहोस्',
+                'icon': 'book',
+                'rarity': 'epic',
+                'criteria': {'category': 'grammar-basics', 'completion': 100},
+                'points_reward': 200,
+                'coins_reward': 100,
+                'is_hidden': False,
+                'is_active': True
+            }
+        ]
+        
+        for data in achievements_data:
+            achievement = Achievement.objects.create(**data)
+            self.achievements.append(achievement)
+            print_success(f"Created achievement: {achievement.name}")
+        
+        # Badges
+        badges_data = [
+            {
+                'name': 'Beginner',
+                'name_nepali': 'नौसिखिया',
+                'icon': 'beginner',
+                'description': 'Started learning',
+                'badge_type': 'milestone',
+                'criteria': {'level': 1},
+                'is_active': True
+            },
+            {
+                'name': 'Intermediate',
+                'name_nepali': 'मध्यवर्ती',
+                'icon': 'intermediate',
+                'description': 'Making progress',
+                'badge_type': 'milestone',
+                'criteria': {'level': 5},
+                'is_active': True
+            },
+            {
+                'name': 'Advanced',
+                'name_nepali': 'उन्नत',
+                'icon': 'advanced',
+                'description': 'Advanced learner',
+                'badge_type': 'milestone',
+                'criteria': {'level': 10},
+                'is_active': True
+            },
+            {
+                'name': 'Master',
+                'name_nepali': 'मास्टर',
+                'icon': 'master',
+                'description': 'Mastered Nepali',
+                'badge_type': 'special',
+                'criteria': {'level': 20},
+                'is_active': True
+            }
+        ]
+        
+        for data in badges_data:
+            badge = Badge.objects.create(**data)
+            self.badges.append(badge)
+            print_success(f"Created badge: {badge.name}")
+        
+        # Award some achievements to users
+        for user in self.users[:5]:
+            for achievement in random.sample(self.achievements, k=random.randint(1, 2)):
+                UserAchievement.objects.create(
+                    user=user,
+                    achievement=achievement,
+                    rewards_claimed=random.choice([True, False])
+                )
+            print_success(f"Awarded achievements to {user.username}")
+
+    def create_games(self):
+        """Create games"""
+        print_section("Creating Games")
+        
+        games_data = [
+            {
+                'name': 'Grammar Shooter',
+                'name_nepali': 'व्याकरण शूटर',
+                'description': 'Test your grammar knowledge in this fast-paced game',
+                'game_type': 'grammar_shooter',
+                'difficulty': 'medium',
+                'instructions': 'Choose the correct grammar form before time runs out!',
+                'instructions_nepali': 'समय समाप्त हुनु अघि सही व्याकरण रूप छान्नुहोस्!',
+                'settings': {'time_limit': 60, 'questions_per_round': 10},
+                'base_points': 10,
+                'base_coins': 5,
+                'is_active': True,
+                'is_featured': True
+            },
+            {
+                'name': 'Word Match',
+                'name_nepali': 'शब्द मिलान',
+                'description': 'Match Nepali words with their meanings',
+                'game_type': 'word_match',
+                'difficulty': 'easy',
+                'instructions': 'Match words with their correct meanings',
+                'instructions_nepali': 'शब्दहरूलाई उनीहरूको सही अर्थसँग मिलाउनुहोस्',
+                'settings': {'pairs': 8, 'time_limit': 120},
+                'base_points': 5,
+                'base_coins': 3,
+                'is_active': True,
+                'is_featured': False
+            },
+            {
+                'name': 'Sentence Builder',
+                'name_nepali': 'वाक्य निर्माता',
+                'description': 'Build correct Nepali sentences',
+                'game_type': 'sentence_builder',
+                'difficulty': 'hard',
+                'instructions': 'Arrange words to form correct sentences',
+                'instructions_nepali': 'सही वाक्य बनाउन शब्दहरू व्यवस्थित गर्नुहोस्',
+                'settings': {'words_per_sentence': 6, 'time_limit': 90},
+                'base_points': 15,
+                'base_coins': 8,
+                'is_active': True,
+                'is_featured': True
+            }
+        ]
+        
+        for data in games_data:
+            game = Game.objects.create(**data)
+            self.games.append(game)
+            print_success(f"Created game: {game.name}")
+        
+        # Create game sessions
+        for user in self.users:
+            for game in random.sample(self.games, k=random.randint(1, 2)):
+                for _ in range(random.randint(1, 5)):
+                    score = random.randint(100, 1000)
+                    started = timezone.now() - timedelta(days=random.randint(0, 30), hours=random.randint(0, 2))
+                    GameSession.objects.create(
+                        user=user,
+                        game=game,
+                        score=score,
+                        high_score=False,
+                        stats={'accuracy': random.randint(60, 100), 'time': random.randint(60, 300)},
+                        time_spent=random.randint(60, 300),
+                        points_earned=game.base_points * (score // 100),
+                        coins_earned=game.base_coins * (score // 100),
+                        started_at=started
+                    )
+            print_success(f"Created game sessions for {user.username}")
+
+    def create_writing_prompts(self):
+        """Create writing prompts"""
+        print_section("Creating Writing Prompts")
+        
+        prompts_data = [
+            {
+                'title': 'My Family',
+                'title_nepali': 'मेरो परिवार',
+                'description': 'Write about your family in Nepali',
+                'description_nepali': 'नेपालीमा आफ्नो परिवारको बारेमा लेख्नुहोस्',
+                'prompt_type': 'essay',
+                'difficulty': 'easy',
+                'guidelines': ['Use proper grammar', 'Include family members', 'Describe relationships'],
+                'examples': [{'text': 'मेरो परिवारमा पाँच जना छन्...'}],
+                'min_words': 100,
+                'max_words': 300,
+                'points_reward': 50,
+                'coins_reward': 25,
+                'is_active': True
+            },
+            {
+                'title': 'A Day in My Life',
+                'title_nepali': 'मेरो जीवनको एक दिन',
+                'description': 'Describe your typical day',
+                'description_nepali': 'आफ्नो सामान्य दिनको वर्णन गर्नुहोस्',
+                'prompt_type': 'story',
+                'difficulty': 'medium',
+                'guidelines': ['Use past tense', 'Be descriptive', 'Follow chronological order'],
+                'examples': [{'text': 'बिहान ६ बजे उठें...'}],
+                'min_words': 200,
+                'max_words': 500,
+                'points_reward': 75,
+                'coins_reward': 40,
+                'is_active': True
+            },
+            {
+                'title': 'My Dream',
+                'title_nepali': 'मेरो सपना',
+                'description': 'Write about your dreams and aspirations',
+                'description_nepali': 'आफ्नो सपना र आकांक्षाको बारेमा लेख्नुहोस्',
+                'prompt_type': 'creative',
+                'difficulty': 'hard',
+                'guidelines': ['Be creative', 'Use advanced vocabulary', 'Proper sentence structure'],
+                'examples': [{'text': 'मेरो सपना डाक्टर बन्ने हो...'}],
+                'min_words': 300,
+                'max_words': 600,
+                'points_reward': 100,
+                'coins_reward': 50,
+                'is_active': True
+            }
+        ]
+        
+        for data in prompts_data:
+            prompt = WritingPrompt.objects.create(**data)
+            self.writing_prompts.append(prompt)
+            print_success(f"Created writing prompt: {prompt.title}")
+        
+        # Create some submissions
+        for user in self.users[:5]:
+            prompt = random.choice(self.writing_prompts)
+            submitted_time = timezone.now() - timedelta(days=random.randint(1, 10))
+            WritingSubmission.objects.create(
+                user=user,
+                prompt=prompt,
+                title=f"My {prompt.title}",
+                content=f"Sample writing submission for {prompt.title} by {user.username}. This is a comprehensive essay...",
+                word_count=random.randint(prompt.min_words, prompt.max_words),
+                status='reviewed',
+                score=random.randint(60, 100),
+                grammar_score=random.randint(60, 100),
+                vocabulary_score=random.randint(60, 100),
+                structure_score=random.randint(60, 100),
+                creativity_score=random.randint(60, 100),
+                feedback='Good work! Keep practicing.',
+                suggestions=['Use more advanced vocabulary', 'Improve sentence structure'],
+                corrections=[],
+                points_earned=prompt.points_reward,
+                coins_earned=prompt.coins_reward,
+                time_spent=random.randint(600, 1800),
+                submitted_at=submitted_time,
+                reviewed_at=submitted_time + timedelta(days=1)
+            )
+        print_success(f"Created writing submissions")
+
+    def create_building_types(self):
+        """Create village building types"""
+        print_section("Creating Building Types")
+        
+        buildings_data = [
+            {
+                'name': 'Library',
+                'name_nepali': 'पुस्तकालय',
+                'slug': 'library',
+                'description': 'Increase knowledge points',
+                'icon': 'library',
+                'size_width': 2,
+                'size_height': 2,
+                'coin_cost': 100,
+                'knowledge_cost': 50,
+                'benefits': {'knowledge_boost': 10},
+                'min_village_level': 1,
+                'max_count': 2,
+                'is_active': True
+            },
+            {
+                'name': 'School',
+                'name_nepali': 'विद्यालय',
+                'slug': 'school',
+                'description': 'Learn faster',
+                'icon': 'school',
+                'size_width': 3,
+                'size_height': 2,
+                'coin_cost': 200,
+                'knowledge_cost': 100,
+                'benefits': {'xp_boost': 15},
+                'min_village_level': 3,
+                'max_count': 1,
+                'is_active': True
+            },
+            {
+                'name': 'Market',
+                'name_nepali': 'बजार',
+                'slug': 'market',
+                'description': 'Earn more coins',
+                'icon': 'market',
+                'size_width': 2,
+                'size_height': 2,
+                'coin_cost': 150,
+                'knowledge_cost': 0,
+                'benefits': {'coin_boost': 20},
+                'min_village_level': 2,
+                'max_count': 3,
+                'is_active': True
+            }
+        ]
+        
+        for data in buildings_data:
+            building_type = BuildingType.objects.create(**data)
+            self.building_types.append(building_type)
+            print_success(f"Created building type: {building_type.name}")
+        
+        # Add buildings to villages
+        for user in self.users:
+            village = Village.objects.get(user=user)
+            for building_type in random.sample(self.building_types, k=random.randint(1, 2)):
+                VillageBuilding.objects.create(
+                    village=village,
+                    building_type=building_type,
+                    level=random.randint(1, 3),
+                    position_x=random.randint(0, village.grid_width - 1),
+                    position_y=random.randint(0, village.grid_height - 1)
+                )
+            print_success(f"Added buildings to {user.username}'s village")
+
+    def create_activity_logs(self):
+        """Create activity logs for users"""
+        print_section("Creating Activity Logs")
+        
+        activities = [
+            'lesson_complete', 'quiz_complete', 'achievement_earned',
+            'level_up', 'streak_milestone', 'quest_complete'
+        ]
+        
+        for user in self.users:
+            for _ in range(random.randint(5, 20)):
+                ActivityLog.log_activity(
+                    user=user,
+                    activity_type=random.choice(activities),
+                    description=f"User completed {random.choice(activities)}",
+                    metadata={'test': True}
+                )
+            print_success(f"Created activity logs for {user.username}")
+
+    def generate_all(self):
+        """Generate all synthetic data"""
+        print_section("COMPREHENSIVE GAME DATA GENERATION")
+        if not self.lessons:
+             self.load_content() # ensure content matches
+
+        self.clear_gamification_data()
+        self.load_content()
+        self.create_users(10)
+        self.create_user_progress()
+        self.create_quests()
+        self.create_achievements_and_badges()
+        self.create_games()
+        self.create_writing_prompts()
+        self.create_building_types()
+        self.create_activity_logs()
+        return True
+
+
 def main():
     """Main entry point"""
     import argparse
     
     parser = argparse.ArgumentParser(
-        description='Populate Nepali Grammar Lesson Data',
+        description='Setup Full Nepali Grammar Database',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python populate_lesson_data.py              # Update/create lessons
-  python populate_lesson_data.py --clear      # Clear and recreate all data
+  python setup_database.py              # Update/create all data
+  python setup_database.py --clear      # Clear and recreate all data
         """
     )
     parser.add_argument(
         '--clear',
         action='store_true',
-        help='Clear existing lesson data before populating'
+        help='Clear existing data before populating'
     )
     
     args = parser.parse_args()
     
     if args.clear:
-        print(f"\n{RED}WARNING: This will delete all existing Class 4 Nepali Grammar lessons!{RESET}")
+        print(f"\n{RED}WARNING: This will delete ALL existing data including users and lessons!{RESET}")
         confirm = input("Are you sure you want to continue? (yes/no): ")
         if confirm.lower() != 'yes':
             print("Cancelled.")
             return 1
     
+    print_section("STEP 1: LESSON CONTENT")
     populator = LessonDataPopulator(clear_existing=args.clear)
-    success = populator.run()
+    success_lessons = populator.run()
     
-    return 0 if success else 1
+    if not success_lessons:
+        print_error("Failed to populate lessons. Stopping.")
+        return 1
+        
+    print_section("STEP 2: USERS AND GAMIFICATION")
+    gamification = GamificationGenerator()
+    success_game = gamification.generate_all()
+
+    if success_lessons and success_game:
+        print(f"\n{GREEN}{'='*80}{RESET}")
+        print(f"{GREEN}✓ FULL DATABASE SETUP COMPLETE!{RESET}")
+        print(f"{GREEN}{'='*80}{RESET}")
+        return 0
+    
+    return 1
 
 
 if __name__ == "__main__":

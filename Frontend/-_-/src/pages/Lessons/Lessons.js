@@ -5,15 +5,16 @@ import { useGame } from '../../contexts/GameContext';
 import { BookOpen, CheckCircle, Lock, Star, Play, Award } from 'lucide-react';
 import LessonContent from '../../components/Lessons/LessonContent';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
-import { getLessons, getLessonById } from '../../services/api';
+import { getLessons, getLessonById, startLesson, getQuestions, completeLesson as completeLessonApi } from '../../services/api';
 
 const Lessons = () => {
   const { t } = useLanguage();
-  const { gameState, completeLesson, addPoints, addCoins } = useGame();
+  const { gameState, completeLesson: markLessonComplete, addPoints, addCoins } = useGame();
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openingLesson, setOpeningLesson] = useState(false);
+  const [lessonError, setLessonError] = useState(null);
 
   const mapDifficulty = (difficulty) => {
     const map = {
@@ -31,38 +32,50 @@ const Lessons = () => {
     const fetchLessons = async () => {
       try {
         setLoading(true);
+        setLessonError(null);
         const response = await getLessons();
+        const lessonsData = Array.isArray(response) ? response : response?.data || [];
+        console.log('Lessons fetched from API:', lessonsData);
 
-        if (response && response.data) {
-          const transformedLessons = response.data.map(lesson => ({
-            id: lesson.slug || lesson.id,
-            title: lesson.title_nepali || lesson.title,
-            subtitle: lesson.description_nepali || lesson.description,
-            topics: lesson.content?.topics || [],
-            points: lesson.points_reward || 50,
-            duration: `${lesson.estimated_time || 10} ${t('minutes')}`,
-            difficulty: mapDifficulty(lesson.difficulty),
-            locked: false
-          }));
+        if (lessonsData.length > 0) {
+          const transformedLessons = lessonsData.map(lesson => {
+            const lockedFromApi = typeof lesson.is_locked === 'boolean' ? lesson.is_locked : undefined;
+            return {
+              id: lesson.id,
+              slug: lesson.slug,
+              title: lesson.title_nepali || lesson.title || 'पाठ',
+              title_english: lesson.title,
+              subtitle: lesson.description_nepali || lesson.description || '',
+              description_english: lesson.description,
+              topics: lesson.content?.topics || [],
+              points: lesson.points_reward || 50,
+              duration: `${lesson.estimated_time || 10} ${t('minutes')}`,
+              difficulty: mapDifficulty(lesson.difficulty),
+              locked: lockedFromApi,
+              raw: lesson
+            };
+          });
 
-          const lessonsWithLock = transformedLessons.map(lesson => {
-            if (lesson.id === transformedLessons[0].id) {
+          const lessonsWithLock = transformedLessons.map((lesson, index) => {
+            if (typeof lesson.locked === 'boolean') {
+              return lesson;
+            }
+
+            if (index === 0) {
               return { ...lesson, locked: false };
             }
 
-            const currentIndex = transformedLessons.findIndex(l => l.id === lesson.id);
-            if (currentIndex > 0) {
-              const prevLesson = transformedLessons[currentIndex - 1];
-              const isLocked = !gameState.completedLessons.includes(prevLesson.id);
-              return { ...lesson, locked: isLocked };
-            }
-
-            return lesson;
+            const prevLesson = transformedLessons[index - 1];
+            const isLocked = !gameState.completedLessons.includes(prevLesson.id);
+            return { ...lesson, locked: isLocked };
           });
 
           setLessons(lessonsWithLock);
+        } else {
+          setLessons([]);
         }
       } catch (error) {
+        setLessonError('Failed to load lessons. Please try again.');
         console.error('Failed to fetch lessons:', error);
       } finally {
         setLoading(false);
@@ -87,30 +100,119 @@ const Lessons = () => {
     
     try {
       setOpeningLesson(true);
-      const fullLessonData = await getLessonById(lesson.id);
-      if (fullLessonData) {
-        // Merge list data with detail data if needed, or just use detail data
-        // Detail data should have content, examples, exercises
-        setSelectedLesson(fullLessonData);
-      } else {
-        // Fallback if API fails but we have basic info
-        setSelectedLesson(lesson);
+      setLessonError(null);
+      console.log('Starting lesson:', lesson.id);
+
+      let sessionId = null;
+      let startTime = null;
+      let detailData = null;
+
+      try {
+        const startData = await startLesson(lesson.id);
+        sessionId = startData?.sessionId || startData?.session_id || null;
+        startTime = startData?.startTime || startData?.start_time || null;
+        detailData = startData?.lessonData || startData?.lesson || null;
+        console.log('Lesson start payload:', startData);
+      } catch (startError) {
+        console.warn('Could not start lesson session (maybe unauthenticated). Falling back to detail fetch.', startError);
       }
+
+      if (!detailData) {
+        detailData = await getLessonById(lesson.id);
+      }
+
+      let questions = [];
+      try {
+        const questionsResponse = await getQuestions({ lesson: lesson.id });
+        const normalizedQuestions = Array.isArray(questionsResponse?.data) ? questionsResponse.data : questionsResponse;
+        if (Array.isArray(normalizedQuestions)) {
+          questions = normalizedQuestions;
+        }
+      } catch (questionError) {
+        console.error('Failed to load lesson questions:', questionError);
+      }
+
+      const exercises = (detailData?.exercises && detailData.exercises.length > 0)
+        ? detailData.exercises
+        : [];
+
+      setSelectedLesson({
+        ...lesson,
+        ...detailData,
+        title: detailData?.title_nepali || detailData?.title || lesson.title,
+        title_english: detailData?.title || lesson.title_english,
+        description: detailData?.description_nepali || detailData?.description || lesson.subtitle || '',
+        description_english: detailData?.description || lesson.description_english,
+        points: detailData?.points_reward ?? lesson.points,
+        content: detailData?.content || {},
+        examples: detailData?.examples || [],
+        explanations: detailData?.explanations || [],
+        sessionId,
+        startTime,
+        questions,
+        exercises
+      });
     } catch (error) {
-      console.error("Error fetching lesson details:", error);
+      console.error('Error fetching lesson details:', error);
+      setLessonError('Could not load lesson content. Please try again.');
       setSelectedLesson(lesson);
     } finally {
       setOpeningLesson(false);
     }
   };
 
-  const handleLessonComplete = (lesson) => {
-    if (!gameState.completedLessons.includes(lesson.id)) {
-      completeLesson(lesson.id);
-      addPoints(lesson.points);
-      addCoins(Math.floor(lesson.points / 2));
+  const handleLessonComplete = async (lesson, score = 100, answers = {}) => {
+    const timeSpent = lesson.startTime ? Math.max(1, Math.round((Date.now() - new Date(lesson.startTime)) / 1000)) : 0;
+    const answersArray = Object.keys(answers)
+      .sort((a, b) => Number(a) - Number(b))
+      .map((key) => answers[key]);
+
+    try {
+      const completionPayload = {
+        session_id: lesson.sessionId,
+        score,
+        time_spent: timeSpent,
+        answers: answersArray
+      };
+
+      let pointsEarned = lesson.points ?? 0;
+      let coinsEarned = Math.floor((lesson.points ?? 0) / 2);
+
+      // Always try to call the API to sync with backend
+      if (completionPayload.session_id) {
+        try {
+          console.log('Sending lesson completion to backend:', completionPayload);
+          const completionResponse = await completeLessonApi(lesson.id, completionPayload);
+          console.log('Lesson completion response:', completionResponse);
+          
+          pointsEarned = completionResponse?.pointsEarned ?? lesson.points ?? 0;
+          coinsEarned = completionResponse?.coinsEarned ?? Math.floor((lesson.points ?? 0) / 2);
+
+          if (completionResponse?.nextLesson?.id) {
+            console.log('Next lesson unlocked:', completionResponse.nextLesson.id);
+          }
+        } catch (apiError) {
+          console.warn('API call to complete lesson failed, will proceed with local updates:', apiError);
+          // Still mark as complete locally even if API fails
+        }
+      } else {
+        console.warn('No session id available; recording lesson completion locally.');
+      }
+
+      // Update local state regardless of API success
+      if (!gameState.completedLessons.includes(lesson.id)) {
+        markLessonComplete(lesson.id);
+        console.log('Lesson marked as complete locally:', lesson.id);
+      }
+
+      addPoints(pointsEarned);
+      addCoins(coinsEarned);
+    } catch (error) {
+      console.error('Error completing lesson:', error);
+      setLessonError('Failed to save lesson completion. Please try again.');
+    } finally {
+      setSelectedLesson(null);
     }
-    setSelectedLesson(null);
   };
 
   const handleCloseLessson = () => {
@@ -144,6 +246,12 @@ const Lessons = () => {
             {t('learning_lessons')}
           </h1>
         </motion.div>
+
+        {lessonError && (
+          <div className="mt-4 mb-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {lessonError}
+          </div>
+        )}
 
         {/* Learning Path */}
         <div className="relative my-8 md:my-12">

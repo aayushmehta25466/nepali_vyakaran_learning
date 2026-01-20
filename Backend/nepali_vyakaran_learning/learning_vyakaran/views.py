@@ -96,7 +96,8 @@ class LessonListView(generics.ListAPIView):
         ]
     )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
+        return success_response(data=response.data)
 
 
 class LessonDetailView(generics.RetrieveAPIView):
@@ -116,7 +117,8 @@ class LessonDetailView(generics.RetrieveAPIView):
         tags=["Lessons"]
     )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
+        return success_response(data=response.data)
 
 
 class LessonContentView(generics.RetrieveAPIView):
@@ -136,7 +138,8 @@ class LessonContentView(generics.RetrieveAPIView):
         tags=["Lessons"]
     )
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        response = super().get(request, *args, **kwargs)
+        return success_response(data=response.data)
 
 
 class StartLessonView(APIView):

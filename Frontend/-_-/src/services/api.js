@@ -1,5 +1,19 @@
 import apiClient from './apiClient';
 
+// Normalize varying backend response shapes (plain data vs. success_response wrapper)
+// Also handles paginated responses where data.results contains the actual array
+const unwrapResponse = (response) => {
+  // Try to extract data from common response patterns
+  const data = response?.data?.data ?? response?.data ?? response;
+  
+  // If data is an object with 'results' (paginated), return results array
+  if (data && typeof data === 'object' && Array.isArray(data.results)) {
+    return data.results;
+  }
+  
+  return data;
+};
+
 /**
  * API Helper Functions
  * 
@@ -215,7 +229,7 @@ export const verifyOTP = async (emailOrData, otp_code, purpose = 'verification')
 export const getLessons = async (params = {}) => {
   try {
     const response = await apiClient.get('/lessons/', { params });
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Failed to fetch lessons:', error.response?.data || error.message);
     return null;
@@ -224,13 +238,13 @@ export const getLessons = async (params = {}) => {
 
 /**
  * Get single lesson details
- * @param {Number} lessonId - Lesson ID
+ * @param {Number|String} lessonId - Lesson ID (UUID)
  * @returns {Promise} - Lesson details with questions
  */
 export const getLessonById = async (lessonId) => {
   try {
     const response = await apiClient.get(`/lessons/${lessonId}/`);
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Failed to fetch lesson ${lessonId}:`, error.response?.data || error.message);
     return null;
@@ -253,12 +267,12 @@ export const getQuestions = async (params = {}) => {
       const response = await apiClient.get(
         `/lessons/${params.lesson}/questions/`
       );
-      return response.data;
+      return unwrapResponse(response);
     }
     
     // Otherwise use general questions endpoint (for quizzes)
     const response = await apiClient.get('/questions/', { params });
-    return response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error('Failed to fetch questions:', error.response?.data || error.message);
     return null;
@@ -421,7 +435,7 @@ export const getLessonsProgress = async () => {
 export const startLesson = async (lessonId) => {
   try {
     const response = await apiClient.post(`/lessons/${lessonId}/start/`);
-    return response.data?.data || response.data;
+    return unwrapResponse(response);
   } catch (error) {
     console.error(`Failed to start lesson ${lessonId}:`, error);
     throw error;
@@ -431,14 +445,15 @@ export const startLesson = async (lessonId) => {
 /**
  * Mark lesson as complete
  * @param {String} lessonId - Lesson UUID
+ * @param {Object} data - { session_id, score, time_spent, answers }
  * @returns {Promise}
  */
-export const completeLesson = async (lessonId) => {
+export const completeLesson = async (lessonId, data = {}) => {
   try {
-    const response = await apiClient.post(`/lessons/${lessonId}/complete/`);
-    return response.data?.data || response.data;
+    const response = await apiClient.post(`/lessons/${lessonId}/complete/`, data);
+    return unwrapResponse(response);
   } catch (error) {
-    console.error(`Failed to mark lesson ${lessonId} complete:`, error);
+    console.error(`Failed to mark lesson ${lessonId} complete:`, error.response?.data || error.message);
     throw error;
   }
 };
