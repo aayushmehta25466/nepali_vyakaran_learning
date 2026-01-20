@@ -29,6 +29,9 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p /app/staticfiles /app/media
 
+
+# dump data inside the database
+RUN python setup_database.py
 # Collect static files (will work even if migrations not run yet)
 RUN python manage.py collectstatic --noinput --clear || true
 
