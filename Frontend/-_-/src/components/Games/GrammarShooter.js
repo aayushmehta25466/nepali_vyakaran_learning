@@ -214,6 +214,7 @@ const GrammarShooter = () => {
   const [grammarQuestions, setGrammarQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [gameId, setGameId] = useState(null);
+  const [isCorrect, setIsCorrect] = useState(null);
   
   const { addPoints, addCoins } = useGame();
   const { t } = useLanguage();

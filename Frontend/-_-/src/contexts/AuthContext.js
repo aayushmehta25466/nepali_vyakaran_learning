@@ -30,6 +30,9 @@ export const AuthProvider = ({ children }) => {
   // State to hold user data
   const [user, setUser] = useState(null);
   
+  // State to hold game state from backend
+  const [gameState, setGameState] = useState(null);
+  
   // State to track if we're checking authentication
   const [loading, setLoading] = useState(true);
   
@@ -93,6 +96,13 @@ export const AuthProvider = ({ children }) => {
       
       // Set user state (triggers re-render of all components using this context)
       setUser(data.user);
+      
+      // Set game state from backend
+      if (data.gameState) {
+        setGameState(data.gameState);
+        console.log('📊 Game state loaded:', data.gameState.completedLessons);
+      }
+      
       console.log('✅ Login successful:', data.user.email);
       
       return data;
@@ -116,6 +126,13 @@ export const AuthProvider = ({ children }) => {
       
       // After registration, user is automatically logged in
       setUser(data.user);
+      
+      // Set game state from backend
+      if (data.gameState) {
+        setGameState(data.gameState);
+        console.log('📊 Game state loaded:', data.gameState.completedLessons);
+      }
+      
       console.log('✅ Registration successful:', data.user.email);
       
       return data;
@@ -138,11 +155,13 @@ export const AuthProvider = ({ children }) => {
       
       // Clear user state
       setUser(null);
+      setGameState(null);
       console.log('✅ Logout successful');
     } catch (error) {
       console.error('❌ Logout error:', error);
       // Clear user state anyway
       setUser(null);
+      setGameState(null);
     }
   };
 
@@ -153,6 +172,7 @@ export const AuthProvider = ({ children }) => {
    */
   const value = {
     user,           // Current user object
+    gameState,      // Current game state from backend
     loading,        // Is auth check in progress?
     isAuthenticated, // Boolean: is logged in?
     login,          // Login function

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useGame } from '../../contexts/GameContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { BookOpen, CheckCircle, Lock, Star, Play, Award } from 'lucide-react';
 import LessonContent from '../../components/Lessons/LessonContent';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
@@ -10,6 +11,10 @@ import { getLessons, getLessonById, startLesson, getQuestions, completeLesson as
 const Lessons = () => {
   const { t } = useLanguage();
   const { gameState, completeLesson: markLessonComplete, addPoints, addCoins } = useGame();
+  const { isAuthenticated } = useAuth();
+  const completedLessons = Array.isArray(gameState?.completedLessons)
+    ? gameState.completedLessons
+    : [];
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +71,7 @@ const Lessons = () => {
             }
 
             const prevLesson = transformedLessons[index - 1];
-            const isLocked = !gameState.completedLessons.includes(prevLesson.id);
+            const isLocked = !completedLessons.includes(prevLesson.id);
             return { ...lesson, locked: isLocked };
           });
 
@@ -83,14 +88,14 @@ const Lessons = () => {
     };
 
     fetchLessons();
-  }, [gameState.completedLessons]);
+  }, [completedLessons]);
 
   // Fallback lessons
   const fallbackLessons = [
     { id: 'lesson_1_naam', title: t('lesson_1_title') || 'पाठ १: नाम', subtitle: t('lesson_1_subtitle') || 'संज्ञाका प्रकार र पहिचान', topics: ['व्यक्तिवाचक संज्ञा', 'जातिवाचक संज्ञा', 'समूहवाचक संज्ञा', 'भाववाचक संज्ञा'], points: 50, duration: `15 ${t('minutes')}`, difficulty: t('easy'), locked: false },
-    { id: 'lesson_2_sarbanaam', title: t('lesson_2_title') || 'पाठ २: सर्वनाम', subtitle: t('lesson_2_subtitle') || 'संज्ञाको सट्टामा प्रयोग हुने शब्दहरू', topics: ['पुरुषवाचक सर्वनाम', 'निश्चयवाचक सर्वनाम'], points: 60, duration: `16 ${t('minutes')}`, difficulty: t('easy'), locked: !gameState.completedLessons.includes('lesson_1_naam') },
-    { id: 'lesson_3_visheshan', title: t('lesson_3_title') || 'पाठ ३: विशेषण', subtitle: t('lesson_3_subtitle') || 'गुण बताउने शब्दहरू', topics: ['गुणवाचक विशेषण', 'संख्यावाचक विशेषण'], points: 70, duration: `15 ${t('minutes')}`, difficulty: t('easy'), locked: !gameState.completedLessons.includes('lesson_2_sarbanaam') },
-    { id: 'lesson_4_kriya', title: t('lesson_4_title') || 'पाठ ४: क्रिया', subtitle: t('lesson_4_subtitle') || 'काम बताउने शब्दहरू', topics: ['सकर्मक क्रिया', 'अकर्मक क्रिया'], points: 80, duration: `9 ${t('minutes')}`, difficulty: t('medium_label'), locked: !gameState.completedLessons.includes('lesson_3_visheshan') }
+    { id: 'lesson_2_sarbanaam', title: t('lesson_2_title') || 'पाठ २: सर्वनाम', subtitle: t('lesson_2_subtitle') || 'संज्ञाको सट्टामा प्रयोग हुने शब्दहरू', topics: ['पुरुषवाचक सर्वनाम', 'निश्चयवाचक सर्वनाम'], points: 60, duration: `16 ${t('minutes')}`, difficulty: t('easy'), locked: !completedLessons.includes('lesson_1_naam') },
+    { id: 'lesson_3_visheshan', title: t('lesson_3_title') || 'पाठ ३: विशेषण', subtitle: t('lesson_3_subtitle') || 'गुण बताउने शब्दहरू', topics: ['गुणवाचक विशेषण', 'संख्यावाचक विशेषण'], points: 70, duration: `15 ${t('minutes')}`, difficulty: t('easy'), locked: !completedLessons.includes('lesson_2_sarbanaam') },
+    { id: 'lesson_4_kriya', title: t('lesson_4_title') || 'पाठ ४: क्रिया', subtitle: t('lesson_4_subtitle') || 'काम बताउने शब्दहरू', topics: ['सकर्मक क्रिया', 'अकर्मक क्रिया'], points: 80, duration: `9 ${t('minutes')}`, difficulty: t('medium_label'), locked: !completedLessons.includes('lesson_3_visheshan') }
   ];
 
   const displayLessons = lessons.length > 0 ? lessons : fallbackLessons;
@@ -162,14 +167,21 @@ const Lessons = () => {
   };
 
   const handleLessonComplete = async (lesson, score = 100, answers = {}) => {
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setLessonError('कृपया पाठ पूरा गर्न लिखिनुहोस्। (Please log in to complete lessons)');
+      console.warn('User not authenticated. Cannot complete lesson.');
+      return;
+    }
+
     const timeSpent = lesson.startTime ? Math.max(1, Math.round((Date.now() - new Date(lesson.startTime)) / 1000)) : 0;
     const answersArray = Object.keys(answers)
       .sort((a, b) => Number(a) - Number(b))
       .map((key) => answers[key]);
 
     try {
+      // Build completion payload without session_id (now optional on backend)
       const completionPayload = {
-        session_id: lesson.sessionId,
         score,
         time_spent: timeSpent,
         answers: answersArray
@@ -178,29 +190,24 @@ const Lessons = () => {
       let pointsEarned = lesson.points ?? 0;
       let coinsEarned = Math.floor((lesson.points ?? 0) / 2);
 
-      // Always try to call the API to sync with backend
-      if (completionPayload.session_id) {
-        try {
-          console.log('Sending lesson completion to backend:', completionPayload);
-          const completionResponse = await completeLessonApi(lesson.id, completionPayload);
-          console.log('Lesson completion response:', completionResponse);
-          
-          pointsEarned = completionResponse?.pointsEarned ?? lesson.points ?? 0;
-          coinsEarned = completionResponse?.coinsEarned ?? Math.floor((lesson.points ?? 0) / 2);
+      // Call the API to sync with backend
+      try {
+        console.log('Sending lesson completion to backend:', completionPayload);
+        const completionResponse = await completeLessonApi(lesson.id, completionPayload);
+        console.log('Lesson completion response:', completionResponse);
+        
+        pointsEarned = completionResponse?.pointsEarned ?? lesson.points ?? 0;
+        coinsEarned = completionResponse?.coinsEarned ?? Math.floor((lesson.points ?? 0) / 2);
 
-          if (completionResponse?.nextLesson?.id) {
-            console.log('Next lesson unlocked:', completionResponse.nextLesson.id);
-          }
-        } catch (apiError) {
-          console.warn('API call to complete lesson failed, will proceed with local updates:', apiError);
-          // Still mark as complete locally even if API fails
+        if (completionResponse?.nextLesson?.id) {
+          console.log('Next lesson unlocked:', completionResponse.nextLesson.id);
         }
-      } else {
-        console.warn('No session id available; recording lesson completion locally.');
+      } catch (apiError) {
+        console.warn('API call to complete lesson failed, will proceed with local updates:', apiError);
       }
 
       // Update local state regardless of API success
-      if (!gameState.completedLessons.includes(lesson.id)) {
+      if (!completedLessons.includes(lesson.id)) {
         markLessonComplete(lesson.id);
         console.log('Lesson marked as complete locally:', lesson.id);
       }
@@ -285,7 +292,7 @@ const Lessons = () => {
                     absolute top-1/2 -translate-y-1/2 w-12 h-12 rounded-full
                     flex items-center justify-center text-white z-[2] shadow-lg
                     -left-[42px] md:-left-[60px]
-                    ${isLeft ? '' : 'md:left-auto md:-left-[60px]'}
+                    ${isLeft ? '' : 'md:left-auto md:-right-[60px]'}
                     ${isCompleted ? 'bg-gradient-to-br from-secondary to-secondary-light' :
                       lesson.locked ? 'bg-gradient-to-br from-gray-400 to-gray-300' :
                         'bg-gradient-to-br from-primary to-primary-dark'}

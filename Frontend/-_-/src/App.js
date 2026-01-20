@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import styled from 'styled-components';
-import { AuthProvider } from './contexts/AuthContext';
 import { useLanguage } from './contexts/LanguageContext';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import Header from './components/Header/Header';
@@ -39,98 +38,96 @@ function App() {
   
   return (
     <Router>
-      <AuthProvider>
-        <AppContainer key={language}>
-          <Header />
-          <MainContent>
-            <Routes>
-              {/* Home Route - Shows PublicHome or Dashboard based on auth */}
-              <Route path="/" element={<HomeRouter />} />
-              
-              {/* Public Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              
-              {/* Protected Routes - Dashboard and Learning */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard key={language} />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/lessons" 
-                element={
-                  <ProtectedRoute>
-                    <Lessons />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/games" 
-                element={
-                  <ProtectedRoute>
-                    <Games />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/games/grammar-shooter" 
-                element={
-                  <ProtectedRoute>
-                    <GrammarShooter />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/writing" 
-                element={
-                  <ProtectedRoute>
-                    <Writing />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/progress" 
-                element={
-                  <ProtectedRoute>
-                    <Progress />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/settings" 
-                element={
-                  <ProtectedRoute>
-                    <Settings />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/village" 
-                element={
-                  <ProtectedRoute>
-                    <Village />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/profile" 
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </MainContent>
-        </AppContainer>
-      </AuthProvider>
+      <AppContainer key={language}>
+        <Header />
+        <MainContent>
+          <Routes>
+            {/* Home Route - Shows PublicHome or Dashboard based on auth */}
+            <Route path="/" element={<HomeRouter />} />
+            
+            {/* Public Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            
+            {/* Protected Routes - Dashboard and Learning */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard key={language} />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/lessons" 
+              element={
+                <ProtectedRoute>
+                  <Lessons />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/games" 
+              element={
+                <ProtectedRoute>
+                  <Games />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/games/grammar-shooter" 
+              element={
+                <ProtectedRoute>
+                  <GrammarShooter />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/writing" 
+              element={
+                <ProtectedRoute>
+                  <Writing />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/progress" 
+              element={
+                <ProtectedRoute>
+                  <Progress />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/village" 
+              element={
+                <ProtectedRoute>
+                  <Village />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </MainContent>
+      </AppContainer>
     </Router>
   );
 }

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const GameContext = createContext();
 
@@ -23,10 +24,43 @@ const initialGameState = {
 };
 
 export const GameProvider = ({ children }) => {
+  const { gameState: authGameState, user } = useAuth();
+  
+  const normalizeGameState = (incoming) => {
+    if (!incoming || typeof incoming !== 'object') {
+      return initialGameState;
+    }
+
+    const completed = Array.isArray(incoming.completedLessons)
+      ? incoming.completedLessons
+      : Array.isArray(incoming.completed_lessons)
+        ? incoming.completed_lessons
+        : [];
+
+    return {
+      ...initialGameState,
+      ...incoming,
+      completedLessons: completed
+    };
+  };
+
+  // Initialize game state from localStorage or use initial state
   const [gameState, setGameState] = useState(() => {
     const saved = localStorage.getItem('nepali-learning-game-state');
-    return saved ? JSON.parse(saved) : initialGameState;
+    const parsed = saved ? JSON.parse(saved) : null;
+    return normalizeGameState(parsed);
   });
+
+  // When user logs in and authGameState is available, sync it with local state
+  useEffect(() => {
+    if (user && authGameState) {
+      console.log('🔄 Syncing game state from backend:', authGameState);
+      const normalized = normalizeGameState(authGameState);
+      setGameState(normalized);
+      // Save to localStorage
+      localStorage.setItem('nepali-learning-game-state', JSON.stringify(normalized));
+    }
+  }, [user, authGameState]);
 
   // Save to localStorage whenever gameState changes
   useEffect(() => {

@@ -140,7 +140,7 @@ class StartLessonSerializer(serializers.Serializer):
 
 class CompleteLessonInputSerializer(serializers.Serializer):
     """Serializer for completing a lesson."""
-    session_id = serializers.CharField(required=True)
+    session_id = serializers.CharField(required=False, allow_blank=True)
     score = serializers.IntegerField(min_value=0, max_value=100, required=True)
     time_spent = serializers.IntegerField(min_value=0, required=True)
     answers = serializers.ListField(required=True)
