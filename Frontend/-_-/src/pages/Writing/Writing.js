@@ -22,25 +22,34 @@ const Writing = () => {
     const fetchPrompts = async () => {
       try {
         setLoading(true);
-        const response = await getWritingPrompts();
+        console.log('📝 Starting to fetch writing prompts...');
+        const promptsArray = await getWritingPrompts();
+        console.log('📝 Received prompts array:', promptsArray);
+        console.log('📝 Is array?', Array.isArray(promptsArray));
+        console.log('📝 Length:', promptsArray?.length);
 
-        if (response && response.data) {
+        if (Array.isArray(promptsArray) && promptsArray.length > 0) {
           const groupedPrompts = {};
-          response.data.forEach(prompt => {
+          promptsArray.forEach(prompt => {
+            console.log('📝 Processing prompt:', prompt);
             groupedPrompts[prompt.prompt_type] = {
               id: prompt.id,
               title: prompt.title_nepali || prompt.title,
               prompt: prompt.description_nepali || prompt.description,
-              placeholder: `${t('writing_placeholder_prefix')} ${prompt.prompt_type}...`
+              placeholder: `तपाईंको ${prompt.title_nepali || prompt.title} यहाँ लेख्नुहोस्...`
             };
           });
+          console.log('✅ Grouped prompts:', groupedPrompts);
           setWritingPrompts(groupedPrompts);
           if (groupedPrompts[selectedType]) {
             setCurrentPromptId(groupedPrompts[selectedType].id);
           }
+        } else {
+          console.warn('⚠️ No prompts found or invalid response, using fallback');
+          setWritingPrompts(fallbackWritingPrompts);
         }
       } catch (error) {
-        console.error('Failed to fetch writing prompts:', error);
+        console.error('❌ Failed to fetch writing prompts:', error);
         setWritingPrompts(fallbackWritingPrompts);
         if (fallbackWritingPrompts[selectedType]) {
           setCurrentPromptId(fallbackWritingPrompts[selectedType].id || null);

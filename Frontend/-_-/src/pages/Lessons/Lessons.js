@@ -41,6 +41,7 @@ const Lessons = () => {
         const response = await getLessons();
         const lessonsData = Array.isArray(response) ? response : response?.data || [];
         console.log('Lessons fetched from API:', lessonsData);
+        console.log('Lessons data length:', lessonsData.length);
 
         if (lessonsData.length > 0) {
           const transformedLessons = lessonsData.map(lesson => {
@@ -99,6 +100,7 @@ const Lessons = () => {
   ];
 
   const displayLessons = lessons.length > 0 ? lessons : fallbackLessons;
+  console.log('Display lessons:', displayLessons.length, 'API lessons:', lessons.length, 'Fallback lessons:', fallbackLessons.length);
 
   const handleLessonClick = async (lesson) => {
     if (lesson.locked) return;
@@ -266,7 +268,7 @@ const Lessons = () => {
           <div className="absolute left-[30px] md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary-dark md:-translate-x-1/2 z-[1]" />
 
           {displayLessons.map((lesson, index) => {
-            const isCompleted = gameState.completedLessons.includes(lesson.id);
+            const isCompleted = completedLessons.includes(lesson.id);
             const isLeft = index % 2 === 0;
 
             return (

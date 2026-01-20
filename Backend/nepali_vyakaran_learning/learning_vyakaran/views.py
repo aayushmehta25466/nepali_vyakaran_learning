@@ -1281,6 +1281,15 @@ class WritingPromptListView(generics.ListAPIView):
     
     def get_queryset(self):
         return WritingPrompt.objects.filter(is_active=True)
+    
+    @extend_schema(
+        summary="Get Writing Prompts",
+        description="Get available writing prompts",
+        tags=["Writing"]
+    )
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, *args, **kwargs)
+        return success_response(data=response.data)
 
 
 class WritingPromptDetailView(generics.RetrieveAPIView):

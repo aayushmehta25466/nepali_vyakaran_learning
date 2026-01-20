@@ -16,11 +16,8 @@ const GameContainer = styled.div`
 `;
 
 const CloseButton = styled.button`
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  width: 45px;
-  height: 45px;
+  width: 40px;
+  height: 40px;
   background: rgba(255, 255, 255, 0.95);
   border: none;
   border-radius: 50%;
@@ -28,7 +25,6 @@ const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 1000;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   
@@ -43,8 +39,8 @@ const CloseButton = styled.button`
   }
   
   svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     color: #333;
   }
 `;
@@ -465,9 +461,6 @@ const GrammarShooter = () => {
 
   return (
     <GameContainer>
-      <CloseButton onClick={() => window.history.back()} aria-label="Close game">
-        <X />
-      </CloseButton>
       {showConfetti && <Confetti />}
       
       {loading ? (
@@ -529,6 +522,9 @@ const GrammarShooter = () => {
                 <span>प्रश्न: {currentQuestion + 1}/{grammarQuestions.length}</span>
               </StatItem>
             </GameStats>
+            <CloseButton onClick={() => window.history.back()} aria-label="Close game">
+              <X />
+            </CloseButton>
           </GameHeader>
 
           <GameArea onMouseMove={handleMouseMove}>

@@ -471,7 +471,7 @@ class WritingPromptListSerializer(serializers.ModelSerializer):
     class Meta:
         model = WritingPrompt
         fields = [
-            'id', 'title', 'title_nepali', 'description',
+            'id', 'title', 'title_nepali', 'description', 'description_nepali',
             'prompt_type', 'difficulty', 'min_words', 'max_words',
             'points_reward', 'coins_reward', 'is_active'
         ]

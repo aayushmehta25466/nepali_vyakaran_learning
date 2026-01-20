@@ -607,10 +607,23 @@ export const completeQuest = async (questId, data = {}) => {
  */
 export const getWritingPrompts = async (params = {}) => {
   try {
+    console.log('📝 Fetching writing prompts with params:', params);
     const response = await apiClient.get('/writing/prompts/', { params });
-    return response.data?.data || response.data;
+    console.log('📝 Raw axios response:', response);
+    console.log('📝 Response.data:', response.data);
+    console.log('📝 Response.data type:', typeof response.data);
+    console.log('📝 Response.data keys:', response.data ? Object.keys(response.data) : 'null');
+    
+    // The backend wraps data in success_response: {success, timestamp, data}
+    // So response.data.data contains the actual array of prompts
+    const prompts = response.data?.data || response.data;
+    console.log('📝 Extracted prompts:', prompts);
+    console.log('📝 Prompts is array?', Array.isArray(prompts));
+    console.log('📝 Prompts length:', Array.isArray(prompts) ? prompts.length : 'N/A');
+    
+    return prompts;
   } catch (error) {
-    console.error('Failed to fetch writing prompts:', error.response?.data || error.message);
+    console.error('❌ Failed to fetch writing prompts:', error.response?.data || error.message);
     return null;
   }
 };
