@@ -45,7 +45,7 @@ const translations = {
     about_description: 'नेपाली व्याकरण सिकाइ एक उद्देश्य-निर्देशित शिक्षण मञ्च हो जो छात्रहरूलाई रमाइलो, इन्टरएक्टिभ तरिकामा नेपाली भाषा सिक्न मद्दत गर्दछ।',
 
     // Dashboard
-    dashboard_title: 'आपको डैशबोर्ड',
+    dashboard_title: 'तपाईंको डैशबोर्ड',
     my_progress: 'मेरो प्रगति',
     continue_learning: 'सिक्न जारी राख्नुहोस्',
     total_time: 'कुल समय',

@@ -251,9 +251,6 @@ const Lessons = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-center text-gray-800 text-2xl md:text-3xl font-bold mb-5 font-nepali">
-            {t('learning_lessons')}
-          </h1>
         </motion.div>
 
         {lessonError && (

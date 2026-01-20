@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useGame } from '../../contexts/GameContext';
-import { BookOpen, Gamepad2, PenTool, TrendingUp, Trophy, Zap, Award, Settings, Menu, X, Home, User } from 'lucide-react';
+import { BookOpen, Gamepad2, TrendingUp, Trophy, Zap, Award, Settings, Menu, X, Home, User } from 'lucide-react';
 
 const Dashboard = () => {
   const { t } = useLanguage();
@@ -18,14 +18,12 @@ const Dashboard = () => {
     { icon: <Home size={20} />, label: t('village'), path: '/village' },
     { icon: <BookOpen size={20} />, label: t('lessons'), path: '/lessons' },
     { icon: <Gamepad2 size={20} />, label: t('games'), path: '/games' },
-    { icon: <PenTool size={20} />, label: t('writing'), path: '/writing' },
     { icon: <Award size={20} />, label: t('progress'), path: '/progress' }
   ];
 
   const activities = [
     { icon: '📚', title: t('lessons'), description: t('lessons_desc'), link: '/lessons' },
     { icon: '🎮', title: t('games'), description: t('games_desc'), link: '/games' },
-    { icon: '✍️', title: t('writing'), description: t('writing_desc'), link: '/writing' },
     { icon: '📊', title: t('progress'), description: t('progress_desc'), link: '/progress' }
   ];
 
@@ -50,7 +48,7 @@ const Dashboard = () => {
       <motion.aside
         className={`
           w-[220px] bg-gradient-to-b from-primary to-primary-dark text-white
-          py-5 shadow-lg overflow-y-auto fixed h-[calc(100vh-60px)] left-0 top-[60px] z-[100]
+          pb-5 pt-0 shadow-lg overflow-y-auto fixed h-[calc(100vh-60px)] left-0 top-[60px] z-[100]
           transition-transform duration-300 ease-in-out
           md:translate-x-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -159,7 +157,7 @@ const Dashboard = () => {
           <h2 className="text-xl text-gray-800 mb-5 font-semibold font-nepali">
             {t('continue_learning')}
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {activities.map((activity, index) => (
               <Link key={index} to={activity.link} className="no-underline text-inherit">
                 <motion.div
@@ -169,7 +167,7 @@ const Dashboard = () => {
                   className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6
                     shadow-md hover:shadow-xl hover:-translate-y-3 hover:scale-[1.02]
                     hover:border-primary transition-all duration-400 cursor-pointer
-                    border-3 border-transparent relative overflow-hidden group
+                    border-3 border-transparent relative overflow-hidden group min-h-[200px]
                     before:content-[''] before:absolute before:top-0 before:left-0 before:right-0
                     before:h-1 before:bg-gradient-to-r before:from-primary before:to-primary-dark
                     before:scale-x-0 before:transition-transform before:duration-400

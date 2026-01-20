@@ -136,62 +136,11 @@ const Settings = () => {
           </div>
         </motion.div>
 
-        {/* Appearance Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 mb-5 shadow-lg border border-white/20"
-        >
-          <h2 className="text-gray-800 mb-4 flex items-center gap-2 text-lg font-semibold font-nepali">
-            <Palette size={20} />
-            {t('appearance')}
-          </h2>
-
-          <div className="flex justify-between items-center py-3 border-b border-gray-100">
-            <div>
-              <div className="font-semibold text-gray-800 mb-1 font-nepali">{t('font_size')}</div>
-              <div className="text-gray-500 text-sm font-nepali">{t('font_size_desc')}</div>
-            </div>
-            <select
-              value={settings.fontSize}
-              onChange={(e) => handleSelect('fontSize', e.target.value)}
-              className="px-3 py-2 border-2 border-gray-200 rounded-lg bg-white text-gray-700
-                focus:outline-none focus:border-primary cursor-pointer"
-            >
-              <option value="small">{t('small')}</option>
-              <option value="medium">{t('medium_label')}</option>
-              <option value="large">{t('large')}</option>
-            </select>
-          </div>
-
-          <div className="py-3">
-            <div className="font-semibold text-gray-800 mb-1 font-nepali">{t('color_theme')}</div>
-            <div className="text-gray-500 text-sm mb-4 font-nepali">{t('color_theme_desc')}</div>
-
-            <div className="grid grid-cols-4 gap-3">
-              {themes.map(theme => (
-                <div
-                  key={theme.id}
-                  onClick={() => handleSelect('theme', theme.id)}
-                  className={`h-14 rounded-xl bg-gradient-to-br ${theme.gradient} cursor-pointer
-                    transition-all duration-300 hover:scale-105 border-3
-                    ${settings.theme === theme.id ? 'border-primary shadow-lg' : 'border-transparent'}`}
-                >
-                  <div className="text-center text-xs text-gray-500 mt-16 font-nepali">
-                    {t(theme.nameKey)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
         {/* Learning Settings Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
           className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 mb-5 shadow-lg border border-white/20"
         >
           <h2 className="text-gray-800 mb-4 flex items-center gap-2 text-lg font-semibold font-nepali">
@@ -236,7 +185,7 @@ const Settings = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
           className="bg-white/95 backdrop-blur-sm rounded-2xl p-5 mb-5 shadow-lg border border-white/20"
         >
           <h2 className="text-gray-800 mb-4 flex items-center gap-2 text-lg font-semibold font-nepali">

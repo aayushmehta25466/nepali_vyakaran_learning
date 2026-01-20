@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { BookOpen, Gamepad2, PenTool, TrendingUp, Settings, Menu, X, Home, User } from 'lucide-react';
+import { BookOpen, Gamepad2, TrendingUp, Settings, Menu, X, Home, User } from 'lucide-react';
 
 const DashboardWrapper = styled.div`
   display: flex;
@@ -152,24 +152,19 @@ const DashboardLayout = ({ children, pageTitle }) => {
       path: '/dashboard'
     },
     {
-      icon: <Home size={20} />,
-      label: t('village'),
-      path: '/village'
-    },
-    {
       icon: <BookOpen size={20} />,
       label: t('lessons'),
       path: '/lessons'
     },
     {
+      icon: <Home size={20} />,
+      label: t('village'),
+      path: '/village'
+    },
+    {
       icon: <Gamepad2 size={20} />,
       label: t('games'),
       path: '/games'
-    },
-    {
-      icon: <PenTool size={20} />,
-      label: t('writing'),
-      path: '/writing'
     },
     {
       icon: <TrendingUp size={20} />,

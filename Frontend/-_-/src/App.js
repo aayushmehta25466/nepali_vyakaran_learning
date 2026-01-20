@@ -29,8 +29,9 @@ const AppContainer = styled.div`
 `;
 
 const MainContent = styled.main`
-  padding-top: 80px;
-  min-height: calc(100vh - 80px);
+  padding-top: 0px;
+  min-height: 100vh;
+  background: white;
 `;
 
 function App() {

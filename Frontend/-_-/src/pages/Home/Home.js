@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useGame } from '../../contexts/GameContext';
-import { BookOpen, Gamepad2, PenTool, TrendingUp, Star, Award } from 'lucide-react';
+import { BookOpen, Gamepad2, TrendingUp, Star, Award } from 'lucide-react';
 
 const Home = () => {
   const { t } = useLanguage();
@@ -23,13 +23,6 @@ const Home = () => {
       descKey: 'games_desc',
       link: '/games',
       gradient: 'from-teal-400 to-green-600'
-    },
-    {
-      icon: PenTool,
-      titleKey: 'writing',
-      descKey: 'writing_desc',
-      link: '/writing',
-      gradient: 'from-green-300 to-green-600'
     },
     {
       icon: TrendingUp,
@@ -106,7 +99,7 @@ const Home = () => {
       </div>
 
       {/* Activity Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {activities.map((activity, index) => {
           const IconComp = activity.icon;
           return (
@@ -119,7 +112,7 @@ const Home = () => {
               <Link
                 to={activity.link}
                 className="block bg-white/95 backdrop-blur-sm rounded-2xl p-5 shadow-lg 
-                  hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                  hover:shadow-xl hover:-translate-y-1 transition-all duration-300 min-h-[200px]"
               >
                 <div className={`w-14 h-14 bg-gradient-to-br ${activity.gradient} rounded-xl flex items-center justify-center mb-4`}>
                   <IconComp className="w-7 h-7 text-white" />

@@ -4,7 +4,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useGame } from '../../contexts/GameContext';
 import { useAuth } from '../../contexts/AuthContext';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
-import { Star, Trophy, Flame, BookOpen, Zap } from 'lucide-react';
+import { Star, Trophy, Flame, BookOpen, Zap, User } from 'lucide-react';
 import { getUserStats } from '../../services/api';
 
 const Profile = () => {
@@ -56,7 +56,7 @@ const Profile = () => {
             text-white p-6 md:p-8 rounded-2xl mb-8 shadow-xl"
         >
           <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/30 flex items-center justify-center text-4xl md:text-5xl flex-shrink-0">
-            👤
+            <User className="text-white" size={48} />
           </div>
           <div>
             <h2 className="text-xl md:text-2xl font-bold mb-1">{user?.username || 'User'}</h2>
