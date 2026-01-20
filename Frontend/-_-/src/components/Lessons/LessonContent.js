@@ -184,6 +184,13 @@ const LessonContent = ({ lesson, onClose, onComplete }) => {
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
 
+  // Normalize exercises to handle different data structures
+  const exercises = lesson.exercises?.map(ex => ({
+    question: ex.question || ex.question_text || ex.question_text_nepali,
+    options: ex.options || [],
+    correctAnswer: ex.correctAnswer !== undefined ? ex.correctAnswer : ex.correct_answer
+  })) || [];
+
   const handleAnswerSelect = (exerciseIndex, optionIndex) => {
     if (showResults) return;
     
@@ -197,21 +204,33 @@ const LessonContent = ({ lesson, onClose, onComplete }) => {
     if (!showResults) {
       setShowResults(true);
     } else {
-      const correctCount = lesson.exercises?.reduce((count, exercise, index) => {
-        return count + (answers[index] === exercise.correctAnswer ? 1 : 0);
+      const correctCount = exercises.reduce((count, exercise, index) => {
+        // Handle both index-based and value-based correct answers
+        const userSelection = exercise.options[answers[index]];
+        const isCorrectIndex = answers[index] === exercise.correctAnswer;
+        const isCorrectValue = String(userSelection) === String(exercise.correctAnswer);
+        
+        // If correctAnswer is a number and looks like an index
+        if (typeof exercise.correctAnswer === 'number' && exercise.correctAnswer < exercise.options.length) {
+            return count + (isCorrectIndex ? 1 : 0);
+        }
+
+        // Fallback check
+        return count + ((isCorrectIndex || isCorrectValue) ? 1 : 0);
       }, 0) || 0;
       
-      const score = lesson.exercises?.length 
-        ? Math.round((correctCount / lesson.exercises.length) * 100) 
+      const score = exercises.length 
+        ? Math.round((correctCount / exercises.length) * 100) 
         : 100;
       
       onComplete(lesson.id, score);
     }
   };
 
-  const allQuestionsAnswered = lesson.exercises 
-    ? lesson.exercises.every((_, index) => answers[index] !== undefined)
+  const allQuestionsAnswered = exercises.length > 0
+    ? exercises.every((_, index) => answers[index] !== undefined)
     : true;
+
 
   return (
     <Modal
@@ -251,32 +270,48 @@ const LessonContent = ({ lesson, onClose, onComplete }) => {
           </ContentSection>
         )}
 
-        {lesson.exercises && lesson.exercises.length > 0 && (
+        {exercises.length > 0 && (
           <ExerciseSection>
             <SectionTitle>अभ्यास (Exercises)</SectionTitle>
-            {lesson.exercises.map((exercise, exerciseIndex) => (
+            {exercises.map((exercise, exerciseIndex) => {
+              // Helper to determine correctness for display
+              const isCorrectDisplay = (optIdx) => {
+                  if (typeof exercise.correctAnswer === 'number') {
+                      return optIdx === exercise.correctAnswer;
+                  }
+                  // Text match
+                  return String(exercise.options[optIdx]) === String(exercise.correctAnswer);
+              };
+
+              return (
               <Question key={exerciseIndex}>
                 <QuestionText className="nepali-text">
                   {exerciseIndex + 1}. {exercise.question}
                 </QuestionText>
                 <Options>
-                  {exercise.options.map((option, optionIndex) => (
+                  {exercise.options.map((option, optionIndex) => {
+                    const isCorrect = isCorrectDisplay(optionIndex);
+                    const isSelected = answers[exerciseIndex] === optionIndex;
+
+                    return (
                     <Option
                       key={optionIndex}
-                      selected={answers[exerciseIndex] === optionIndex && !showResults}
-                      correct={showResults && optionIndex === exercise.correctAnswer}
-                      incorrect={showResults && answers[exerciseIndex] === optionIndex && optionIndex !== exercise.correctAnswer}
+                      selected={isSelected && !showResults}
+                      correct={showResults && isCorrect}
+                      incorrect={showResults && isSelected && !isCorrect}
                       onClick={() => handleAnswerSelect(exerciseIndex, optionIndex)}
                       disabled={showResults}
                       className="nepali-text"
                     >
                       {option}
-                      {showResults && optionIndex === exercise.correctAnswer && ' ✓'}
+                      {showResults && isCorrect && ' ✓'}
                     </Option>
-                  ))}
+                    );
+                  })}
                 </Options>
               </Question>
-            ))}
+              );
+            })}
           </ExerciseSection>
         )}
 

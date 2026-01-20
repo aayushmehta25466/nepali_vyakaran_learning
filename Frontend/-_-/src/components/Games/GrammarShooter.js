@@ -5,7 +5,7 @@ import { useGame } from '../../contexts/GameContext';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { Target, Heart, Star } from 'lucide-react';
 import Confetti from 'react-confetti';
-import { getGrammarShooterQuestions } from '../../services/api';
+import { getGrammarShooterQuestions, endGame, getGames } from '../../services/api';
 
 const GameContainer = styled.div`
   min-height: 100vh;
@@ -213,15 +213,30 @@ const GrammarShooter = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [grammarQuestions, setGrammarQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [gameId, setGameId] = useState(null);
   
   const { addPoints, addCoins } = useGame();
   const { t } = useLanguage();
 
-  // Fetch questions from backend
+  // Fetch game ID and questions
   useEffect(() => {
-    const fetchQuestions = async () => {
+    const initGame = async () => {
       try {
         setLoading(true);
+        
+        // 1. Fetch Game ID
+        const gamesRes = await getGames();
+        // Assuming response structure involves 'games' or it's an array
+        const gamesList = gamesRes?.games || (Array.isArray(gamesRes) ? gamesRes : []);
+        const shooterGame = gamesList.find(g => 
+            g.slug === 'grammar-shooter' || 
+            (g.title && g.title.toLowerCase().includes('grammar shooter'))
+        );
+        if (shooterGame) {
+            setGameId(shooterGame.id);
+        }
+
+        // 2. Fetch Questions
         const response = await getGrammarShooterQuestions();
         
         // Response IS the data object directly (not wrapped in .data)
@@ -229,30 +244,77 @@ const GrammarShooter = () => {
         // But our API wrapper returns the data directly: { questions: [...] }
         const questions = response?.questions || [];
         
-        if (questions.length > 0) {
-          const transformedQuestions = questions.map(q => ({
-            question: q.question_text_nepali || q.question_text,
-            options: q.options?.map(opt => opt.text || opt) || [],
-            correct: q.correct_answer?.answer === 'A' ? 0 : 
-                     q.correct_answer?.answer === 'B' ? 1 :
-                     q.correct_answer?.answer === 'C' ? 2 : 3
-          }));
+        if (questions && questions.length > 0) {
+          const transformedQuestions = questions.map(q => {
+             // Robust correct answer finding
+             let correctIdx = 0;
+             if (q.correct_answer) {
+                 const ca = q.correct_answer;
+                 const list = q.options?.map(o => o.text || o) || [];
+                 
+                 // Case 1: Object with 'answer' key being 'A', 'B', etc.
+                 const ansKey = typeof ca === 'object' ? (ca.answer || ca.value) : ca;
+                 
+                 if (ansKey === 'A') correctIdx = 0;
+                 else if (ansKey === 'B') correctIdx = 1;
+                 else if (ansKey === 'C') correctIdx = 2;
+                 else if (ansKey === 'D') correctIdx = 3;
+                 // Case 2: Direct match with option text
+                 else {
+                    const idx = list.findIndex(opt => String(opt) === String(ansKey));
+                    if (idx !== -1) correctIdx = idx;
+                    // Case 3: Just a number
+                    else if (typeof ansKey === 'number') correctIdx = ansKey;
+                 }
+             }
+
+             return {
+                question: q.question_text_nepali || q.question_text,
+                options: q.options?.map(opt => opt.text || opt) || [],
+                correct: correctIdx
+             };
+          });
           
           setGrammarQuestions(transformedQuestions);
         } else {
           setGrammarQuestions([]);
         }
       } catch (error) {
-        console.error('Failed to fetch questions:', error);
+        console.error('Failed to init game:', error);
         setGrammarQuestions([]);
       } finally {
         setLoading(false);
+      } // Check lives here before proceeding? Actually logic below handles it better?
+        // Wait, if lives became 0 (actually prev-1), we shouldn't proceed.
+        // lives update is async.
+        // Better check lives - 1 if incorrect.
+      } 
+      
+      // We rely on effects or next render for state, but here we are in callback.
+      // Let's just rely on the existing logic which was:
+      if (lives > (isCorrect ? 0 : 1) && currentQuestion < grammarQuestions.length - 1) {
+         setCurrentQuestion(prev => prev + 1);
+      } else {
+         finishGame(score + (isCorrect ? 10 : 0)); // Pass updated score
       }
-    };
+    }, 1500);
+  };
 
-    fetchQuestions();
-  }, []);
-
+  const finishGame = async (finalScore) => {
+      setGameState('gameOver');
+      
+      if (gameId) {
+          try {
+              await endGame(gameId, {
+                  score: finalScore,
+                  duration: 0, // Should track duration
+                  questions_attempted: currentQuestion + 1,
+                  correct_answers: Math.floor(finalScore / 10)
+              });
+          } catch (e) {
+              console.error("Failed to save game score", e);
+          }
+      }
   const handleMouseMove = useCallback((e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setMousePosition({

@@ -5,7 +5,7 @@ import { useGame } from '../../contexts/GameContext';
 import { BookOpen, CheckCircle, Lock, Star, Play, Award } from 'lucide-react';
 import LessonContent from '../../components/Lessons/LessonContent';
 import DashboardLayout from '../../components/DashboardLayout/DashboardLayout';
-import { getLessons } from '../../services/api';
+import { getLessons, getLessonById } from '../../services/api';
 
 const Lessons = () => {
   const { t } = useLanguage();
@@ -13,6 +13,7 @@ const Lessons = () => {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openingLesson, setOpeningLesson] = useState(false);
 
   const mapDifficulty = (difficulty) => {
     const map = {
@@ -81,9 +82,26 @@ const Lessons = () => {
 
   const displayLessons = lessons.length > 0 ? lessons : fallbackLessons;
 
-  const handleLessonClick = (lesson) => {
+  const handleLessonClick = async (lesson) => {
     if (lesson.locked) return;
-    setSelectedLesson(lesson);
+    
+    try {
+      setOpeningLesson(true);
+      const fullLessonData = await getLessonById(lesson.id);
+      if (fullLessonData) {
+        // Merge list data with detail data if needed, or just use detail data
+        // Detail data should have content, examples, exercises
+        setSelectedLesson(fullLessonData);
+      } else {
+        // Fallback if API fails but we have basic info
+        setSelectedLesson(lesson);
+      }
+    } catch (error) {
+      console.error("Error fetching lesson details:", error);
+      setSelectedLesson(lesson);
+    } finally {
+      setOpeningLesson(false);
+    }
   };
 
   const handleLessonComplete = (lesson) => {
@@ -143,11 +161,12 @@ const Lessons = () => {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ scale: lesson.locked ? 1 : 1.02 }}
-                onClick={() => handleLessonClick(lesson)}
+                onClick={() => !openingLesson && handleLessonClick(lesson)}
                 className={`
                   relative bg-white/95 backdrop-blur-sm rounded-2xl p-5 my-6
                   shadow-lg border border-white/20 transition-all duration-300
                   ${lesson.locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:-translate-y-1 hover:shadow-xl'}
+                  ${openingLesson ? 'cursor-wait' : ''}
                   ml-[60px] md:ml-0
                   ${isLeft ? 'md:mr-[55%]' : 'md:ml-[55%]'}
                 `}

@@ -248,6 +248,15 @@ export const getLessonById = async (lessonId) => {
  */
 export const getQuestions = async (params = {}) => {
   try {
+    // If querying by lesson, use lesson-specific endpoint
+    if (params.lesson) {
+      const response = await apiClient.get(
+        `/lessons/${params.lesson}/questions/`
+      );
+      return response.data;
+    }
+    
+    // Otherwise use general questions endpoint (for quizzes)
     const response = await apiClient.get('/questions/', { params });
     return response.data;
   } catch (error) {

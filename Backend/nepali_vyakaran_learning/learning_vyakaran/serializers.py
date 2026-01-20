@@ -39,7 +39,7 @@ class LessonListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
         fields = [
-            'id', 'title', 'title_nepali', 'slug', 'description',
+            'id', 'title', 'title_nepali', 'slug', 'description', 'description_nepali',
             'category', 'level', 'difficulty', 'order',
             'points_reward', 'coins_reward', 'estimated_time',
             'is_published', 'is_premium', 'is_locked', 'user_progress'

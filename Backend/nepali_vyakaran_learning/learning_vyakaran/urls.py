@@ -18,6 +18,7 @@ urlpatterns = [
     path('lessons/<uuid:lesson_id>/content/', views.LessonContentView.as_view(), name='lesson-content'),
     path('lessons/<uuid:lesson_id>/start/', views.StartLessonView.as_view(), name='lesson-start'),
     path('lessons/<uuid:lesson_id>/complete/', views.CompleteLessonAPIView.as_view(), name='lesson-complete'),
+    path('lessons/<uuid:lesson_id>/questions/', views.LessonQuestionsView.as_view(), name='lesson-questions'),
 
     # ==========================================================================
     # QUIZZES

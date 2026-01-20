@@ -234,7 +234,16 @@ class Question(models.Model):
     quiz = models.ForeignKey(
         Quiz,
         on_delete=models.CASCADE,
-        related_name='questions'
+        related_name='questions',
+        null=True,
+        blank=True
+    )
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name='questions',
+        null=True,
+        blank=True
     )
     
     difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
@@ -262,7 +271,17 @@ class Question(models.Model):
     class Meta:
         verbose_name = 'Question'
         verbose_name_plural = 'Questions'
-        ordering = ['quiz', 'order']
+        ordering = ['order', 'created_at']
+        indexes = [
+            models.Index(fields=['lesson', 'order']),
+            models.Index(fields=['quiz', 'order']),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(quiz__isnull=False) | models.Q(lesson__isnull=False),
+                name='question_has_quiz_or_lesson'
+            )
+        ]
     
     def __str__(self):
         return f"Q: {self.question_text[:50]}..."

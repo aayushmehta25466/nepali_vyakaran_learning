@@ -76,7 +76,7 @@ class LessonListView(generics.ListAPIView):
     Get all available lessons.
     """
     serializer_class = LessonListSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['category__slug', 'level', 'difficulty', 'is_premium']
     search_fields = ['title', 'title_nepali', 'description']
@@ -106,7 +106,7 @@ class LessonDetailView(generics.RetrieveAPIView):
     """
     queryset = Lesson.objects.filter(is_published=True)
     serializer_class = LessonDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     lookup_field = 'id'
     lookup_url_kwarg = 'lesson_id'
     
@@ -126,7 +126,7 @@ class LessonContentView(generics.RetrieveAPIView):
     """
     queryset = Lesson.objects.filter(is_published=True)
     serializer_class = LessonContentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     lookup_field = 'id'
     lookup_url_kwarg = 'lesson_id'
     
@@ -258,6 +258,39 @@ class CompleteLessonAPIView(APIView):
             'coinsEarned': coins_earned,
             'nextLesson': LessonListSerializer(next_lesson, context={'request': request}).data if next_lesson else None
         })
+
+
+class LessonQuestionsView(generics.ListAPIView):
+    """
+    GET /api/v1/lessons/{lesson_id}/questions/
+    Get all questions for a specific lesson.
+    """
+    serializer_class = QuestionSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def get_queryset(self):
+        lesson_id = self.kwargs.get('lesson_id')
+        
+        # Verify lesson exists and is published
+        try:
+            lesson = Lesson.objects.get(id=lesson_id, is_published=True)
+        except Lesson.DoesNotExist:
+            return Question.objects.none()
+        
+        # Return questions for this lesson, ordered
+        return Question.objects.filter(
+            lesson=lesson
+        ).order_by('order')
+    
+    @extend_schema(
+        summary="Get Lesson Questions",
+        description="Get all questions/exercises for a specific lesson",
+        tags=["Lessons"]
+    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return success_response(data=serializer.data)
 
 
 class LessonProgressView(APIView):
