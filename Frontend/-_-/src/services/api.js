@@ -308,10 +308,15 @@ export const submitAnswer = async (questionId, answerId) => {
  */
 export const getGames = async () => {
   try {
+    console.log('🎮 Fetching games from API...');
     const response = await apiClient.get('/games/');
-    return response.data?.data || response.data;
+    console.log('📦 Raw API response:', response);
+    console.log('📦 response.data:', response.data);
+    const result = response.data?.data || response.data;
+    console.log('📦 Unwrapped result:', result);
+    return result;
   } catch (error) {
-    console.error('Failed to fetch games:', error.response?.data || error.message);
+    console.error('❌ Failed to fetch games:', error.response?.data || error.message);
     return null;
   }
 };
@@ -323,10 +328,19 @@ export const getGames = async () => {
  */
 export const getGrammarShooterQuestions = async (params = {}) => {
   try {
+    console.log('🚀 Fetching grammar shooter questions with params:', params);
     const response = await apiClient.get('/games/grammar-shooter/questions/', { params });
-    return response.data?.data || response.data;
+    console.log('✅ API Response received:', response);
+    console.log('Response status:', response.status);
+    console.log('Response data:', response.data);
+    const result = response.data?.data || response.data;
+    console.log('🎯 Unwrapped result:', result);
+    return result;
   } catch (error) {
-    console.error('Failed to fetch grammar shooter questions:', error.response?.data || error.message);
+    console.error('❌ Failed to fetch grammar shooter questions');
+    console.error('Error status:', error.response?.status);
+    console.error('Error data:', error.response?.data);
+    console.error('Error message:', error.message);
     return null;
   }
 };

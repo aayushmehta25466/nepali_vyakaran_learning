@@ -3,16 +3,50 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../../contexts/GameContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Target, Heart, Star } from 'lucide-react';
+import { Target, Heart, Star, X } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { getGrammarShooterQuestions, endGame, getGames } from '../../services/api';
 
 const GameContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   padding: 20px;
   position: relative;
   overflow: hidden;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 45px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+    color: #333;
+  }
 `;
 
 const GameHeader = styled.div`
@@ -151,7 +185,7 @@ const GameOverModal = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,7 +248,7 @@ const GrammarShooter = () => {
   const [grammarQuestions, setGrammarQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [gameId, setGameId] = useState(null);
-  const [isCorrect, setIsCorrect] = useState(null);
+  const [error, setError] = useState(null);
   
   const { addPoints, addCoins } = useGame();
   const { t } = useLanguage();
@@ -224,98 +258,151 @@ const GrammarShooter = () => {
     const initGame = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // 1. Fetch Game ID
+        console.log('🎮 Fetching games...');
         const gamesRes = await getGames();
-        // Assuming response structure involves 'games' or it's an array
-        const gamesList = gamesRes?.games || (Array.isArray(gamesRes) ? gamesRes : []);
+        console.log('📦 Games response:', gamesRes);
+        console.log('📦 Games response type:', typeof gamesRes);
+        console.log('📦 Games response keys:', gamesRes ? Object.keys(gamesRes) : 'null');
+        
+        // Safely extract games array from response
+        let gamesList = [];
+        if (Array.isArray(gamesRes?.games)) {
+          gamesList = gamesRes.games;
+          console.log('✅ Got games from gamesRes.games');
+        } else if (Array.isArray(gamesRes)) {
+          gamesList = gamesRes;
+          console.log('✅ gamesRes is already an array');
+        } else if (gamesRes?.data && Array.isArray(gamesRes.data)) {
+          gamesList = gamesRes.data;
+          console.log('✅ Got games from gamesRes.data');
+        } else {
+          console.warn('⚠️ Could not extract games array. gamesRes:', gamesRes);
+        }
+        console.log('📋 Games list:', gamesList, 'Type:', typeof gamesList, 'IsArray:', Array.isArray(gamesList));
+        
+        if (!Array.isArray(gamesList)) {
+          throw new Error(`gamesList is not an array, got ${typeof gamesList}`);
+        }
+        
         const shooterGame = gamesList.find(g => 
             g.slug === 'grammar-shooter' || 
             (g.title && g.title.toLowerCase().includes('grammar shooter'))
         );
         if (shooterGame) {
             setGameId(shooterGame.id);
+            console.log('✅ Found game:', shooterGame);
         }
 
         // 2. Fetch Questions
+        console.log('🎯 Fetching questions...');
         const response = await getGrammarShooterQuestions();
+        console.log('📥 Grammar Shooter Questions Response:', response);
+        console.log('Response type:', typeof response);
+        console.log('Response keys:', response ? Object.keys(response) : 'null');
+        
+        if (!response) {
+          throw new Error('API returned null/undefined response');
+        }
         
         // Response IS the data object directly (not wrapped in .data)
         // API returns: { success, timestamp, data: { questions: [...] } }
         // But our API wrapper returns the data directly: { questions: [...] }
         const questions = response?.questions || [];
+        console.log('❓ Extracted questions:', questions);
+        console.log('Questions count:', questions?.length || 0);
         
         if (questions && questions.length > 0) {
-          const transformedQuestions = questions.map(q => {
-             // Robust correct answer finding
-             let correctIdx = 0;
-             if (q.correct_answer) {
-                 const ca = q.correct_answer;
-                 const list = q.options?.map(o => o.text || o) || [];
-                 
-                 // Case 1: Object with 'answer' key being 'A', 'B', etc.
-                 const ansKey = typeof ca === 'object' ? (ca.answer || ca.value) : ca;
-                 
-                 if (ansKey === 'A') correctIdx = 0;
-                 else if (ansKey === 'B') correctIdx = 1;
-                 else if (ansKey === 'C') correctIdx = 2;
-                 else if (ansKey === 'D') correctIdx = 3;
-                 // Case 2: Direct match with option text
-                 else {
-                    const idx = list.findIndex(opt => String(opt) === String(ansKey));
-                    if (idx !== -1) correctIdx = idx;
-                    // Case 3: Just a number
-                    else if (typeof ansKey === 'number') correctIdx = ansKey;
-                 }
-             }
+          console.log(`✅ Processing ${questions.length} questions...`);
+          try {
+            const transformedQuestions = questions.map((q, idx) => {
+              try {
+                console.log(`Question ${idx}:`, q);
+                // Robust correct answer finding
+                let correctIdx = 0;
+                if (q.correct_answer !== undefined && q.correct_answer !== null) {
+                    const ca = q.correct_answer;
+                    const list = q.options?.map(o => o.text || o) || [];
+                    
+                    // Case 0: Direct number
+                    if (typeof ca === 'number') {
+                       correctIdx = ca;
+                    }
+                    // Case 1: String number
+                    else if (typeof ca === 'string' && !isNaN(ca)) {
+                       correctIdx = parseInt(ca, 10);
+                    }
+                    // Case 2: Object with 'answer' key
+                    else if (typeof ca === 'object') {
+                       const ansKey = ca.answer || ca.value;
+                       if (typeof ansKey === 'number') correctIdx = ansKey;
+                       else if (typeof ansKey === 'string' && !isNaN(ansKey)) correctIdx = parseInt(ansKey, 10);
+                       else if (ansKey === 'A') correctIdx = 0;
+                       else if (ansKey === 'B') correctIdx = 1;
+                       else if (ansKey === 'C') correctIdx = 2;
+                       else if (ansKey === 'D') correctIdx = 3;
+                    }
+                    // Case 3: String like 'A', 'B', 'C', 'D'
+                    else if (typeof ca === 'string') {
+                       if (ca === 'A') correctIdx = 0;
+                       else if (ca === 'B') correctIdx = 1;
+                       else if (ca === 'C') correctIdx = 2;
+                       else if (ca === 'D') correctIdx = 3;
+                       // Try to match with option text
+                       else {
+                          const matchIdx = list.findIndex(opt => String(opt).toLowerCase() === String(ca).toLowerCase());
+                          if (matchIdx !== -1) correctIdx = matchIdx;
+                       }
+                    }
+                }
+                console.log(`  ➜ Question ${idx} correct answer index: ${correctIdx}`);
 
-             return {
-                question: q.question_text_nepali || q.question_text,
-                options: q.options?.map(opt => opt.text || opt) || [],
-                correct: correctIdx
-             };
-          });
-          
-          setGrammarQuestions(transformedQuestions);
+                const transformed = {
+                   question: q.question_text_nepali || q.question_text || 'N/A',
+                   options: (q.options?.map(opt => opt.text || opt) || []).filter(o => o),
+                   correct: Math.max(0, Math.min(correctIdx, (q.options?.length || 0) - 1))
+                };
+                
+                if (idx === 0) console.log('🔍 First question transformed:', transformed);
+                return transformed;
+              } catch (mapError) {
+                console.error(`Error processing question ${idx}:`, mapError);
+                return {
+                  question: 'Error loading question',
+                  options: ['Error'],
+                  correct: 0
+                };
+              }
+            });
+            
+            console.log('✨ All questions transformed:', transformedQuestions);
+            setGrammarQuestions(transformedQuestions);
+          } catch (transformError) {
+            console.error('Error transforming questions:', transformError);
+            setError('Questions could not be processed: ' + transformError.message);
+            setGrammarQuestions([]);
+          }
         } else {
+          console.warn('⚠️ No questions found in response');
+          setError('No questions available. Response: ' + JSON.stringify(response).substring(0, 200));
           setGrammarQuestions([]);
         }
       } catch (error) {
-        console.error('Failed to init game:', error);
+        console.error('❌ Failed to init game:', error);
+        console.error('Error details:', error.message);
+        console.error('Error stack:', error.stack);
+        setError('Failed to load game: ' + error.message);
         setGrammarQuestions([]);
       } finally {
         setLoading(false);
-      } // Check lives here before proceeding? Actually logic below handles it better?
-        // Wait, if lives became 0 (actually prev-1), we shouldn't proceed.
-        // lives update is async.
-        // Better check lives - 1 if incorrect.
-      } 
-      
-      // We rely on effects or next render for state, but here we are in callback.
-      // Let's just rely on the existing logic which was:
-      if (lives > (isCorrect ? 0 : 1) && currentQuestion < grammarQuestions.length - 1) {
-         setCurrentQuestion(prev => prev + 1);
-      } else {
-         finishGame(score + (isCorrect ? 10 : 0)); // Pass updated score
       }
-    }, 1500);
-  };
+    };
+    
+    initGame();
+  }, []);
 
-  const finishGame = async (finalScore) => {
-      setGameState('gameOver');
-      
-      if (gameId) {
-          try {
-              await endGame(gameId, {
-                  score: finalScore,
-                  duration: 0, // Should track duration
-                  questions_attempted: currentQuestion + 1,
-                  correct_answers: Math.floor(finalScore / 10)
-              });
-          } catch (e) {
-              console.error("Failed to save game score", e);
-          }
-      }
   const handleMouseMove = useCallback((e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setMousePosition({
@@ -325,12 +412,13 @@ const GrammarShooter = () => {
   }, []);
 
   const handleTargetClick = (optionIndex, e) => {
-    const isCorrect = optionIndex === grammarQuestions[currentQuestion].correct;
+    const correct = optionIndex === grammarQuestions[currentQuestion].correct;
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const popupX = rect.left + rect.width / 2;
     const popupY = rect.top;
     
-    if (isCorrect) {
+    if (correct) {
       const points = 10;
       setScore(prev => prev + points);
       addPoints(points);
@@ -377,6 +465,9 @@ const GrammarShooter = () => {
 
   return (
     <GameContainer>
+      <CloseButton onClick={() => window.history.back()} aria-label="Close game">
+        <X />
+      </CloseButton>
       {showConfetti && <Confetti />}
       
       {loading ? (
@@ -384,7 +475,29 @@ const GrammarShooter = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <h2 className="nepali-text">प्रश्नहरू लोड गर्दै...</h2>
+          <ModalContent>
+            <h2 className="nepali-text">प्रश्नहरू लोड गर्दै...</h2>
+            {error && (
+              <div style={{ color: 'red', marginTop: '20px', fontSize: '14px', textAlign: 'left' }}>
+                <strong>Error:</strong> {error}
+              </div>
+            )}
+          </ModalContent>
+        </GameOverModal>
+      ) : error ? (
+        <GameOverModal
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <ModalContent>
+            <ModalTitle className="nepali-text">त्रुटि!</ModalTitle>
+            <div style={{ color: 'red', marginTop: '20px', marginBottom: '20px', textAlign: 'left' }}>
+              <strong>समस्या:</strong> {error}
+            </div>
+            <PlayButton onClick={() => window.location.reload()}>
+              पुनः प्रयास गर्नुहोस्
+            </PlayButton>
+          </ModalContent>
         </GameOverModal>
       ) : gameState === 'menu' ? (
         <GameOverModal
