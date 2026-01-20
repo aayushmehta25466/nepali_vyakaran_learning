@@ -69,7 +69,7 @@ services:
       - backend_static:/app/staticfiles:ro
       - backend_media:/app/media:ro
     ports:
-      - "80:80"
+      - "8005:80"
     depends_on:
       - backend
       - frontend
