@@ -49,6 +49,8 @@ export const registerUser = async (userData) => {
     
     const response = await apiClient.post('/auth/register/', registrationData);
     
+    console.log('Registration response data:', response.data);
+    
     // Backend returns 'access' and 'refresh' (not 'access_token'/'refresh_token')
     const { access, refresh, user } = response.data;
     

@@ -125,15 +125,19 @@ export const AuthProvider = ({ children }) => {
       const data = await registerUser(userData);
       
       // After registration, user is automatically logged in
-      setUser(data.user);
-      
-      // Set game state from backend
-      if (data.gameState) {
-        setGameState(data.gameState);
-        console.log('📊 Game state loaded:', data.gameState.completedLessons);
+      if (data.user) {
+        setUser(data.user);
+        
+        // Set game state from backend
+        if (data.gameState) {
+          setGameState(data.gameState);
+          console.log('📊 Game state loaded:', data.gameState.completedLessons);
+        }
+        
+        console.log('✅ Registration successful:', data.user.email);
+      } else {
+        console.log('✅ Registration successful, please verify your email');
       }
-      
-      console.log('✅ Registration successful:', data.user.email);
       
       return data;
     } catch (error) {
