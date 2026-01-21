@@ -254,12 +254,9 @@ REST_AUTH = {
 # CORS CONFIGURATION
 # =============================================================================
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+# Parse CORS_ALLOWED_ORIGINS from environment variable
+cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
 
 CORS_ALLOW_CREDENTIALS = True
 
